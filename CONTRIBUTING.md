@@ -247,7 +247,7 @@ The script gives the credential these values. For this repository:
 | Field of the federated credential | Value |
 | --- | --- |
 | Issuer | `https://token.actions.githubusercontent.com` |
-| Subject | `repo:nimblescape@156021698/nimblescape-markdown-comment-links@1415401293:environment:marketplace` |
+| Subject | `repo:nimblescape@156021698/nimblescape-markdown-comment-links@1415771729:environment:marketplace` |
 | Audience | `api://AzureADTokenExchange` |
 
 GitHub puts the owner ID and the repository ID into the subject of every
