@@ -5,8 +5,8 @@ takes the section of a version as the notes of its GitHub release.
 
 ## 0.1.1
 
-Maintenance release: the contribution guide changed; the extension behaves as in
-0.1.0.
+Maintenance release: the test tool and the contribution guide changed; the
+extension behaves as in 0.1.0.
 
 ## 0.1.0
 
