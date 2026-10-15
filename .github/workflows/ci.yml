@@ -6,9 +6,11 @@
 # and every pull request. The job installs the locked development tools,
 # checks the types, runs the tests and packages the VSIX with vsce, which
 # first bundles the extension with esbuild and also validates the manifest and
-# the README. The VSIX stays a workflow artifact for inspection. This workflow
-# publishes nothing: the release workflow calls it for the commit of a
-# version and publishes the VSIX of that call.
+# the README. The VSIX stays a workflow artifact for inspection. The job
+# "release rules" checks the release rules of CONTRIBUTING.md in the source
+# (scripts/release-checks.mjs). This workflow publishes nothing: the release
+# workflow calls it for the commit of a version and publishes the VSIX of that
+# call.
 
 name: CI
 
@@ -65,3 +67,24 @@ jobs:
           name: vsix
           path: '*.vsix'
           if-no-files-found: error
+
+  release-rules:
+    # Rules 1, 2 and 5 of CONTRIBUTING.md: the extension ID follows the naming scheme and is the ID of the last release,
+    # and only the workflow "Release" publishes, with the sign-in to Microsoft Entra ID, and deletes no extension.
+    name: release rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up the pinned Node release
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - name: Check the extension ID and the publishing steps
+        run: node scripts/release-checks.mjs rules
