@@ -635,8 +635,8 @@ test('a refresh that started before an edit applies nothing, and a closed editor
   await f.change(f.go, `package app\nXX${text.slice('package app\n'.length)}`);
   await moved;
   expect(editor.decorations).toBe(undefined);
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  expect(plain(editor.decorations)).toHaveLength(2);
+  // After the pause, the refresh of the new text applies.
+  await vi.waitFor(() => expect(plain(editor.decorations)).toHaveLength(2));
   const resolutions = f.stats.get(unit);
   // An editor that closes during the pause gets no refresh, and its document is not resolved again.
   await f.change(f.go, text);
