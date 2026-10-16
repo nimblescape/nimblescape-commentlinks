@@ -128,6 +128,11 @@ command puts the cursor of the source editor back to where it was before the
 click, so that following a link with the mouse moves no cursor and reveals no
 hidden target.
 
+The command opens only a file that a link of the window names: the link
+provider records the file of every link that it resolves, and the command
+does nothing for other arguments. Another extension, or a `command:` link of
+another source, so cannot open any file through it.
+
 ### Completion
 
 While a Markdown link to a local file is written in a comment, the extension
@@ -143,7 +148,21 @@ absolute path or a bare fragment gets no completion.
 ### Scope and limits
 
 The extension reads files through the workspace file system, changes no
-file, runs no process and needs no opt-in. It supports untrusted and virtual
+file, runs no process and needs no opt-in. A target counts only inside a
+folder of the workspace, or, for a file outside the folders of the
+workspace, inside the folder of that file; the completion lists and reads
+nothing outside these folders either. So a label cannot hide a link to any
+other file of the computer.
+
+The patterns that find the links and the headings take linear time: a label
+holds no bracket, a target no parenthesis, and the end of a heading line is
+scanned without a regular expression. A comment line of thousands of
+brackets or a heading line of thousands of spaces therefore takes
+milliseconds; `src/links.test.ts` checks this. Each version of a document is
+resolved once: the link provider and the hiding of every editor of the
+document share the resolution. After a change of a document, the hiding
+waits 150 ms without a further change, so that typing resolves the links
+once and not at every key. It supports untrusted and virtual
 workspaces, because it only reads. It runs in the workspace host
 (`extensionKind: workspace`), so it resolves links on a remote host, for
 example in a Codespace.

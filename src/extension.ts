@@ -11,8 +11,11 @@
  * link provider for the languages that links.ts lists. It puts a link on
  * the label of such a citation and resolves the target against the
  * directory of the file first and against the workspace folder second.
- * Every link opens through a command of the extension, which opens the
- * target with the editor that the window associates with it. A Markdown
+ * A target must lie inside a folder of the workspace, or, for a file outside
+ * the folders of the workspace, inside the folder of that file, so that a
+ * label cannot hide a link to any other file of the computer. Every link
+ * opens through a command of the extension, which opens only the targets that
+ * its links name, with the editor that the window associates with it. A Markdown
  * target with a fragment opens at the heading the fragment names when that
  * editor can show one: the text editor and the Markdown preview can, and
  * another editor opens the document at its start. The command also keeps
@@ -49,6 +52,9 @@ const clickWindow = 2000;
 /** completionTriggers are the characters that open the completion of a link target: its start, a directory and a fragment. */
 const completionTriggers = ['(', '/', '#'];
 
+/** changeDelay is the pause, in milliseconds, after the last change of a document before the hiding of its editors follows it. */
+const changeDelay = 150;
+
 /** settingsSection names the configuration section of the extension. */
 const settingsSection = 'nimblescape.markdownCommentLinks';
 
@@ -59,17 +65,22 @@ interface UriParts {
   path: string;
 }
 
-/** ResolvedTarget is the command link that opens the target of a link, with its tooltip. */
+/** ResolvedTarget is the command link that opens the target of a link, with its tooltip and the file it opens. */
 interface ResolvedTarget {
   uri: vscode.Uri;
   tooltip: string;
+  parts: UriParts;
 }
 
 /** ResolvedLink is a link of a comment whose target resolves to a file, with the target. */
 type ResolvedLink = CommentLink & ResolvedTarget;
 
-/** LinkCache keeps the resolved links of a document by its URI, with the version of the document. */
-type LinkCache = Map<string, { version: number; links: ResolvedLink[] }>;
+/**
+ * LinkCache keeps the resolution of the links of a document by its URI, with
+ * the version of the document. The resolution of one version runs once: the
+ * link provider and the hiding of every editor of the document share it.
+ */
+type LinkCache = Map<string, { version: number; links: Promise<ResolvedLink[]> }>;
 
 /**
  * activate registers the command, the document link provider for the listed
@@ -80,6 +91,10 @@ type LinkCache = Map<string, { version: number; links: ResolvedLink[] }>;
 export function activate(context: vscode.ExtensionContext): void {
   /** resolved caches the resolved links of a document by its version. */
   const resolved: LinkCache = new Map();
+  /** targets keeps every file that a link of this window opens; the command opens no other file. */
+  const targets = new Set<string>();
+  /** links returns the resolved links of a document and records their files as targets of the command. */
+  const links = (document: vscode.TextDocument): Promise<ResolvedLink[]> => resolvedLinks(document, resolved, targets);
   /** hiding is the decoration that renders no text for the decorated ranges. */
   const hiding = vscode.window.createTextEditorDecorationType({ textDecoration: 'none; display: none;' });
   /** generations orders the refreshes of an editor, so that an older one never wins. */
@@ -92,8 +107,25 @@ export function activate(context: vscode.ExtensionContext): void {
   const refresh = async (editor: vscode.TextEditor): Promise<void> => {
     const generation = (generations.get(editor) ?? 0) + 1;
     generations.set(editor, generation);
-    const ranges = await hiddenRanges(editor, (document) => resolvedLinks(document, undefined, resolved));
+    const ranges = await hiddenRanges(editor, links);
     if (generations.get(editor) === generation) editor.setDecorations(hiding, ranges);
+  };
+  /** changes keeps, per editor, the timer of the refresh after a change of its document. */
+  const changes = new WeakMap<vscode.TextEditor, ReturnType<typeof setTimeout>>();
+  /**
+   * refreshAfterChange refreshes an editor after a pause of changeDelay
+   * without a further change, so that typing resolves the links once and not
+   * at every key.
+   */
+  const refreshAfterChange = (editor: vscode.TextEditor): void => {
+    clearTimeout(changes.get(editor));
+    changes.set(
+      editor,
+      setTimeout(() => {
+        changes.delete(editor);
+        void refresh(editor);
+      }, changeDelay),
+    );
   };
   /** refreshAll records the selections of every visible editor not seen before and refreshes every visible editor. */
   const refreshAll = (): void => {
@@ -116,9 +148,12 @@ export function activate(context: vscode.ExtensionContext): void {
   };
   context.subscriptions.push(
     hiding,
-    vscode.commands.registerCommand(openCommand, (parts: UriParts, fragment: string) => {
+    vscode.commands.registerCommand(openCommand, (parts: unknown, fragment: unknown) => {
+      // Only the file of a link of this window: the command opens no file that another caller names.
+      const target = targetUri(parts);
+      if (!target || !targets.has(target.toString())) return undefined;
       restoreCursor();
-      return openTarget(parts, fragment);
+      return openTarget(target, typeof fragment === 'string' ? fragment : '');
     }),
     vscode.languages.registerDocumentLinkProvider(
       Object.keys(syntaxes).map((language) => ({ language })),
@@ -129,14 +164,14 @@ export function activate(context: vscode.ExtensionContext): void {
          * cancelled request returns no link.
          */
         async provideDocumentLinks(document, token) {
-          const links: vscode.DocumentLink[] = [];
-          for (const link of await resolvedLinks(document, token, resolved)) {
+          const found = await links(document);
+          if (token.isCancellationRequested) return [];
+          return found.map((link) => {
             const range = new vscode.Range(document.positionAt(link.start), document.positionAt(link.end));
             const documentLink = new vscode.DocumentLink(range, link.uri);
             documentLink.tooltip = link.tooltip;
-            links.push(documentLink);
-          }
-          return token.isCancellationRequested ? [] : links;
+            return documentLink;
+          });
         },
       },
     ),
@@ -154,11 +189,13 @@ export function activate(context: vscode.ExtensionContext): void {
         clicks.set(event.textEditor, { selections: selections.get(event.textEditor) ?? [], at: Date.now() });
       }
       selections.set(event.textEditor, event.selections);
+      // While a change of the document waits for its pause, that refresh follows the selection too.
+      if (changes.has(event.textEditor)) return undefined;
       return refresh(event.textEditor);
     }),
     vscode.workspace.onDidChangeTextDocument((event) => {
       for (const editor of vscode.window.visibleTextEditors) {
-        if (editor.document === event.document) refresh(editor);
+        if (editor.document === event.document) refreshAfterChange(editor);
       }
     }),
     vscode.workspace.onDidCloseTextDocument((document) => resolved.delete(document.uri.toString())),
@@ -171,32 +208,36 @@ export function activate(context: vscode.ExtensionContext): void {
 
 /**
  * resolvedLinks returns the Markdown links of the comments of a document
- * whose targets resolve to files, with the target of each. The result is
- * cached by the version of the document. A cancelled request returns the
- * links found so far and caches nothing.
+ * whose targets resolve to files, with the target of each, and records the
+ * file of each link in targets. The resolution is cached by the version of
+ * the document, and concurrent requests for one version share it. A
+ * resolution that fails is not kept, so that the next request tries again.
  * @param document - The document.
- * @param token - The cancellation token of a request, if any.
  * @param cache - Resolved links by document URI.
+ * @param targets - The files that the links of the window open, as URI strings.
  * @returns The resolved links.
  */
-async function resolvedLinks(
-  document: vscode.TextDocument,
-  token: vscode.CancellationToken | undefined,
-  cache: LinkCache,
-): Promise<ResolvedLink[]> {
+function resolvedLinks(document: vscode.TextDocument, cache: LinkCache, targets: Set<string>): Promise<ResolvedLink[]> {
   const syntax = syntaxes[document.languageId];
-  if (!syntax) return [];
+  if (!syntax) return Promise.resolve([]);
   const key = document.uri.toString();
   const cached = cache.get(key);
   if (cached && cached.version === document.version) return cached.links;
-  const folder = vscode.workspace.getWorkspaceFolder(document.uri);
-  const links: ResolvedLink[] = [];
-  for (const link of commentLinks(document.getText(), syntax)) {
-    if (token?.isCancellationRequested) return links;
-    const target = await resolveTarget(document.uri, folder?.uri, link);
-    if (target) links.push({ ...link, ...target });
-  }
+  const links = (async () => {
+    const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+    const found: ResolvedLink[] = [];
+    for (const link of commentLinks(document.getText(), syntax)) {
+      const target = await resolveTarget(document.uri, folder?.uri, link);
+      if (!target) continue;
+      targets.add(vscode.Uri.from(target.parts).toString());
+      found.push({ ...link, ...target });
+    }
+    return found;
+  })();
   cache.set(key, { version: document.version, links });
+  links.catch(() => {
+    if (cache.get(key)?.links === links) cache.delete(key);
+  });
   return links;
 }
 
@@ -236,7 +277,8 @@ async function hiddenRanges(
  * written in a comment. Before a number sign it offers the folders and files
  * of the directory that the target names, resolved against the directory of
  * the document first and against the workspace folder second, with the
- * entries beside the document first. A folder inserts its name with a slash
+ * entries beside the document first, and only in the folders that
+ * allowedTarget permits. A folder inserts its name with a slash
  * and opens the next completion. After the number sign of a Markdown target
  * it offers the anchors of the headings of that document. A cursor outside
  * a comment, outside a link or in a link to a web address gets nothing.
@@ -259,9 +301,11 @@ async function completeTarget(
     if (!/\.md$/i.test(link.path)) return undefined;
     const range = new vscode.Range(document.positionAt(link.start + link.path.length + 1), position);
     for (const base of bases) {
+      const target = vscode.Uri.joinPath(base.uri, link.path);
+      if (!allowedTarget(document.uri, folder?.uri, target)) continue;
       let markdown: string;
       try {
-        markdown = (await vscode.workspace.openTextDocument(vscode.Uri.joinPath(base.uri, link.path))).getText();
+        markdown = (await vscode.workspace.openTextDocument(target)).getText();
       } catch {
         continue;
       }
@@ -279,9 +323,11 @@ async function completeTarget(
   const range = new vscode.Range(document.positionAt(link.start + directory.length), position);
   const items = new Map<string, vscode.CompletionItem>();
   for (const base of bases) {
+    const listed = directory ? vscode.Uri.joinPath(base.uri, directory) : base.uri;
+    if (!allowedTarget(document.uri, folder?.uri, listed)) continue;
     let entries: [string, vscode.FileType][];
     try {
-      entries = await vscode.workspace.fs.readDirectory(directory ? vscode.Uri.joinPath(base.uri, directory) : base.uri);
+      entries = await vscode.workspace.fs.readDirectory(listed);
     } catch {
       continue;
     }
@@ -303,9 +349,39 @@ async function completeTarget(
 }
 
 /**
+ * isWithin reports whether a URI is a folder or lies inside it: the same
+ * scheme and authority, and the path of the folder or a path below it.
+ * @param folder - The folder.
+ * @param target - The URI to test.
+ * @returns Whether the URI is the folder or lies inside it.
+ */
+function isWithin(folder: vscode.Uri, target: vscode.Uri): boolean {
+  if (target.scheme !== folder.scheme || target.authority !== folder.authority) return false;
+  const base = folder.path.endsWith('/') ? folder.path : `${folder.path}/`;
+  return target.path === folder.path || target.path.startsWith(base);
+}
+
+/**
+ * allowedTarget reports whether a link of a document may name a file or a
+ * folder: one inside a folder of the workspace, or, for a document outside
+ * the folders of the workspace, one inside the folder of the document. A
+ * target such as `../../../etc/hostname` that leaves these folders gets no
+ * link and no completion.
+ * @param documentUri - The URI of the document.
+ * @param folderUri - The workspace folder of the document, if any.
+ * @param target - The file or folder that the target names.
+ * @returns Whether the link may name it.
+ */
+function allowedTarget(documentUri: vscode.Uri, folderUri: vscode.Uri | undefined, target: vscode.Uri): boolean {
+  if (vscode.workspace.getWorkspaceFolder(target)) return true;
+  return !folderUri && isWithin(vscode.Uri.joinPath(documentUri, '..'), target);
+}
+
+/**
  * resolveTarget finds the file that a relative link target names: first the
  * path relative to the directory of the document, then the path relative to
- * the workspace folder of the document. The result is a command link that
+ * the workspace folder of the document. A file outside the folders that
+ * allowedTarget permits does not count. The result is a command link that
  * opens the file, at the heading of the fragment when the target is a
  * Markdown file with a fragment. A target that names a directory or that
  * resolves nowhere yields undefined.
@@ -322,6 +398,7 @@ async function resolveTarget(
   const candidates = [vscode.Uri.joinPath(documentUri, '..', link.path)];
   if (folderUri) candidates.push(vscode.Uri.joinPath(folderUri, link.path));
   for (const candidate of candidates) {
+    if (!allowedTarget(documentUri, folderUri, candidate)) continue;
     let stat: vscode.FileStat;
     try {
       stat = await vscode.workspace.fs.stat(candidate);
@@ -336,9 +413,28 @@ async function resolveTarget(
     return {
       uri: vscode.Uri.parse(`command:${openCommand}?${query}`),
       tooltip: `Open ${relative}${fragment ? '#' + fragment : ''}`,
+      parts,
     };
   }
   return undefined;
+}
+
+/**
+ * targetUri returns the URI that the components of a command link name, or
+ * undefined when the arguments of the command are no such components.
+ * @param parts - The first argument of the command.
+ * @returns The URI, or undefined.
+ */
+function targetUri(parts: unknown): vscode.Uri | undefined {
+  if (typeof parts !== 'object' || parts === null) return undefined;
+  const { scheme, authority, path } = parts as Partial<Record<keyof UriParts, unknown>>;
+  if (typeof scheme !== 'string' || typeof authority !== 'string' || typeof path !== 'string') return undefined;
+  try {
+    return vscode.Uri.from({ scheme, authority, path });
+  } catch {
+    // Uri.from refuses components that form no URI, such as an empty scheme.
+    return undefined;
+  }
 }
 
 /**
@@ -352,11 +448,10 @@ async function resolveTarget(
  * shows the line: the Markdown Editor of the editor ignores it and opens the
  * document at its start. A fragment without a heading requests the start of
  * the document. A target without a fragment opens as the editor opens files.
- * @param parts - The components of the target URI.
+ * @param uri - The target URI.
  * @param fragment - The anchor without its number sign, or an empty string.
  */
-async function openTarget(parts: UriParts, fragment: string): Promise<void> {
-  const uri = vscode.Uri.from(parts);
+async function openTarget(uri: vscode.Uri, fragment: string): Promise<void> {
   if (!fragment) {
     await vscode.commands.executeCommand('vscode.open', uri);
     return;

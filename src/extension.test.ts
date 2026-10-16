@@ -183,16 +183,31 @@ function uri(fsPath: string, fragment = ''): FakeUri {
 }
 
 /**
- * fixture creates a temporary workspace with a Go file, a YAML file, a
- * Markdown file beside the Go file and a Markdown file at the root, loads
- * src/extension.ts with a fake editor API in place of the module `vscode` and
- * returns the registered provider, the registered command, the captured
- * listeners and the documents. The end of the test removes the workspace.
+ * inside reports whether a path lies inside a folder.
+ * @param folder - The absolute path of the folder.
+ * @param target - The absolute path to test.
  */
-async function fixture(goText: string, yamlText = '') {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ns-links-'));
-  onTestFinished(() => fs.rm(root, { recursive: true, force: true }));
+const inside = (folder: string, target: string): boolean => target.startsWith(folder + path.sep);
+
+/**
+ * fixture creates a temporary workspace with a Go file, a YAML file, a
+ * Markdown file beside the Go file and a Markdown file at the root, and,
+ * beside the workspace folder, a Markdown file and a folder `loose` with a Go
+ * file that belong to no workspace folder. It loads src/extension.ts with a
+ * fake editor API in place of the module `vscode` and returns the registered
+ * provider, the registered command, the captured listeners and the
+ * documents. The end of the test removes the temporary folder.
+ */
+async function fixture(goText: string, yamlText = '', looseText = '') {
+  const outer = await fs.mkdtemp(path.join(os.tmpdir(), 'ns-links-'));
+  onTestFinished(() => fs.rm(outer, { recursive: true, force: true }));
+  const root = path.join(outer, 'workspace');
   await fs.mkdir(path.join(root, 'internal', 'app', 'docs'), { recursive: true });
+  await fs.mkdir(path.join(outer, 'loose', 'docs'), { recursive: true });
+  await fs.writeFile(path.join(outer, 'secret.md'), '# Secret\n');
+  await fs.writeFile(path.join(outer, 'loose', 'docs', 'near.md'), '# Near\n');
+  const loosePath = path.join(outer, 'loose', 'x.go');
+  await fs.writeFile(loosePath, looseText);
   await fs.mkdir(path.join(root, 'docs', 'architecture'), { recursive: true });
   await fs.writeFile(path.join(root, 'internal', 'app', 'docs', 'local.md'), '# Local\n\n## Section two\n');
   await fs.writeFile(path.join(root, 'docs', 'architecture', 'unit.md'), '# Unit\n\nText.\n\n#### A-UNIT-001\n\nRule.\n');
@@ -212,6 +227,8 @@ async function fixture(goText: string, yamlText = '') {
   const config: Record<string, unknown> = {};
   const associations: Record<string, string> = {};
   const executed: unknown[][] = [];
+  /** stats counts the calls of the fake stat, by path. */
+  const stats = new Map<string, number>();
   /** listen captures the listener of one editor event under its name. */
   const listen = (name: string) => (listener: (event: unknown) => unknown) => {
     listeners[name] = listener;
@@ -301,8 +318,8 @@ async function fixture(goText: string, yamlText = '') {
       },
     },
     workspace: {
-      /** Every document of the fixture belongs to the temporary workspace folder. */
-      getWorkspaceFolder: () => ({ uri: uri(root) }),
+      /** The temporary workspace folder and every path inside it belong to it; another path belongs to no workspace folder. */
+      getWorkspaceFolder: (target: FakeUri) => (target.fsPath === root || inside(root, target.fsPath) ? { uri: uri(root) } : undefined),
       /** asRelativePath renders a path relative to the workspace root. */
       asRelativePath: (target: FakeUri) => path.relative(root, target.fsPath),
       /**
@@ -327,6 +344,7 @@ async function fixture(goText: string, yamlText = '') {
       fs: {
         /** stat maps the editor file type onto the real temporary files. */
         stat: async (target: FakeUri) => {
+          stats.set(target.fsPath, (stats.get(target.fsPath) ?? 0) + 1);
           const stat = await fs.stat(target.fsPath);
           return { type: stat.isDirectory() ? 2 : 1, mtime: stat.mtimeMs, size: stat.size };
         },
@@ -364,7 +382,9 @@ async function fixture(goText: string, yamlText = '') {
         .reduce((sum, l) => sum + l.length + 1, 0) + position.character,
   });
   return {
+    outer,
     root,
+    stats,
     selector,
     subscriptions,
     commands,
@@ -407,7 +427,15 @@ async function fixture(goText: string, yamlText = '') {
       editor.selections = [{ start: position, end: position }];
       await listeners.selection({ textEditor: editor, selections: editor.selections });
     },
+    /** change gives a document a new version and text and runs the change listener, as an edit does. */
+    change: (doc: FakeDocument, text: string) => {
+      const changed = document(doc.uri.fsPath, doc.languageId, text);
+      Object.assign(doc, { version: doc.version + 1, getText: changed.getText, positionAt: changed.positionAt, offsetAt: changed.offsetAt });
+      return listeners.change({ document: doc });
+    },
     go: document(goPath, 'go', goText),
+    /** loose is a Go document that belongs to no workspace folder. */
+    loose: document(loosePath, 'go', looseText),
     yaml: document(yamlPath, 'yaml', yamlText),
     /** markdown builds a document of a language the extension does not list. */
     markdown: document(path.join(root, 'docs', 'architecture', 'unit.md'), 'markdown', goText),
@@ -506,6 +534,76 @@ test('the command opens the target with the default editor and requests the head
   expect(f.shown.length).toBe(shownBefore + 1);
 });
 
+test('a link opens only a file inside the workspace folder, or for a file outside the workspace inside its folder', async () => {
+  const f = await fixture(
+    [
+      'package app',
+      '// Beside the file, up and out: [secret](../../../secret.md)',
+      '// From the workspace folder, up and out: [secret](../secret.md#secret)',
+      '// Inside: [unit](../../docs/architecture/unit.md)',
+    ].join('\n'),
+    '',
+    ['package x', '// Near: [near](docs/near.md)', '// Up and out: [secret](../secret.md)'].join('\n'),
+  );
+  // Both targets name secret.md beside the workspace folder, which exists, and get no link and no stat.
+  const links = await f.links(f.go);
+  expect(plain(links.map((link) => link.tooltip))).toStrictEqual(['Open docs/architecture/unit.md']);
+  expect(f.stats.has(path.join(f.outer, 'secret.md'))).toBe(false);
+  // A file outside the folders of the workspace links inside its own folder only.
+  const loose = await f.links(f.loose);
+  expect(plain(loose.map((link) => queryOf(link)[0]))).toStrictEqual([
+    { scheme: 'file', authority: '', path: path.join(f.outer, 'loose', 'docs', 'near.md') },
+  ]);
+  // The hidden part of the link without a target stays visible.
+  const editor = f.editor(f.go);
+  await f.cursor(editor, 0);
+  expect(plain(editor.decorations)).toHaveLength(2);
+});
+
+test('the command opens only a file that a link of the window names', async () => {
+  const f = await fixture('package app\n// [unit](docs/architecture/unit.md#a-unit-001)\n');
+  const open = f.commands[openCommand];
+  // Before any link was resolved, and for a file that no link names, the command opens nothing.
+  const unit = { scheme: 'file', authority: '', path: path.join(f.root, 'docs', 'architecture', 'unit.md') };
+  await open(unit, 'a-unit-001');
+  await open({ scheme: 'file', authority: '', path: path.join(f.outer, 'secret.md') }, '');
+  await open('file:///etc/hostname', '');
+  await open(undefined, undefined);
+  expect(f.shown).toHaveLength(0);
+  expect(f.executed).toHaveLength(0);
+  // After the link was resolved, its file opens.
+  await f.links(f.go);
+  await open(unit, 'a-unit-001');
+  expect(f.shown.map((editor) => editor.document.uri.fsPath)).toStrictEqual([unit.path]);
+  // A fragment that is no text opens the file at its start.
+  await open(unit, 42);
+  expect(f.executed.at(-1)).toStrictEqual(['vscode.open', `file://${unit.path}`]);
+});
+
+test('one version of a document is resolved once, and an edit refreshes the hiding after a pause', async () => {
+  const text = 'package app\n// [unit](docs/architecture/unit.md)\n';
+  const f = await fixture(text);
+  const editor = f.editor(f.go);
+  const unit = path.join(f.root, 'docs', 'architecture', 'unit.md');
+  // The provider and the hiding of the editor ask at the same time, and share one resolution.
+  await Promise.all([f.links(f.go), f.links(f.go), f.cursor(editor, 0)]);
+  expect(f.stats.get(path.join(f.root, 'internal', 'app', 'docs', 'architecture', 'unit.md'))).toBe(1);
+  expect(f.stats.get(unit)).toBe(1);
+  expect(plain(editor.decorations)).toHaveLength(2);
+  // An edit that removes the link: the hiding follows after the pause, and a cursor move in the pause waits for it.
+  await f.change(f.go, 'package app\n// no link\n');
+  await f.cursor(editor, 0);
+  expect(plain(editor.decorations)).toHaveLength(2);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(plain(editor.decorations)).toStrictEqual([]);
+  // Several edits in a row resolve the last version only.
+  await f.change(f.go, text);
+  await f.change(f.go, text.replace('unit.md', 'unit.md#a-unit-001'));
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(f.stats.get(unit)).toBe(2);
+  expect(plain(editor.decorations)).toHaveLength(2);
+});
+
 test('a link followed after a mouse click keeps the cursor where it was before the click', async () => {
   const f = await fixture('package app\n\n// [unit](docs/architecture/unit.md#a-unit-001)\n');
   const editor = f.editor(f.go);
@@ -593,6 +691,19 @@ test('a link being written completes folders, files and headings, and a web link
   expect(await f.complete(f.go, 4, lines[4].length)).toBe(undefined);
   expect(await f.complete(f.go, 5, lines[5].length - 1)).toBe(undefined);
   expect(await f.complete(f.markdown, 1, lines[1].length)).toBe(undefined);
+});
+
+test('the completion lists no folder and reads no heading outside the folders that a link may name', async () => {
+  const lines = ['package app', '// out [x](../../../', '// heading [x](../../../secret.md#s', '// up [x](../../'];
+  const f = await fixture(lines.join('\n'), '', ['package x', '// [x](../', '// [x](docs/'].join('\n'));
+  // From internal/app, ../../../ leaves the workspace folder, also from the workspace folder itself.
+  expect(await f.complete(f.go, 1, lines[1].length)).toStrictEqual([]);
+  expect(await f.complete(f.go, 2, lines[2].length)).toBe(undefined);
+  // ../../ is the workspace folder itself.
+  expect(plain((await f.complete(f.go, 3, lines[3].length))!.map((item) => item.label))).toStrictEqual(['config.yaml', 'docs/', 'internal/']);
+  // A file outside the folders of the workspace completes inside its own folder only.
+  expect(await f.complete(f.loose, 1, '// [x](../'.length)).toStrictEqual([]);
+  expect(plain((await f.complete(f.loose, 2, '// [x](docs/'.length))!.map((item) => item.label))).toStrictEqual(['near.md']);
 });
 
 test('the manifest activates the extension for every listed language and contributes the hiding setting', async () => {
