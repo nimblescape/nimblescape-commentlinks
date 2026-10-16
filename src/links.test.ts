@@ -17,6 +17,7 @@ import {
   headingLine,
   headings,
   headingSlug,
+  headingText,
   linkUnderCursor,
   syntaxes,
 } from './links';
@@ -168,4 +169,58 @@ test('the default editor of a resource follows the editor associations as the ed
   );
   expect(defaultEditor({ '*.txt': 'e' }, 'file', '/a/x.md')).toBe('');
   expect(defaultEditor(undefined, 'file', '/a/x.md')).toBe('');
+});
+
+test('a label holds no bracket and a target no parenthesis, as in Markdown', () => {
+  const source = '// [a[b](docs/b.md) [c](docs/c(1).md) [d](docs/d.md)';
+  expect(commentLinks(source, syntaxes.go).map((link) => [source.slice(link.start, link.end), link.path])).toStrictEqual([
+    ['b', 'docs/b.md'],
+    ['d', 'docs/d.md'],
+  ]);
+});
+
+test('the text of a heading line drops the number signs and the white space at its ends', () => {
+  const cases: [string, string | undefined][] = [
+    ['# Title', 'Title'],
+    ['   ### Title ##   ', 'Title'],
+    ['## A-UNIT-001 #', 'A-UNIT-001'],
+    ['# C#', 'C'],
+    ['#\tTabbed\t#\t', 'Tabbed'],
+    ['# Title\r', 'Title'],
+    ['# ##', '#'],
+    ['# a # b', 'a # b'],
+    ['#Title', undefined],
+    ['    # Indented', undefined],
+    ['####### Seven', undefined],
+    ['# ', undefined],
+    ['#   ', undefined],
+    ['# a\rb', undefined],
+    ['text # no', undefined],
+  ];
+  for (const [line, text] of cases) expect(headingText(line), JSON.stringify(line)).toBe(text);
+  // The same text as the regular expression that the extension used before, for every heading with text.
+  const before = /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
+  for (const [line, text] of cases) {
+    if (text !== undefined) expect(before.exec(line)?.[1], JSON.stringify(line)).toBe(text);
+  }
+});
+
+test('long lines take linear time: thousands of brackets, parentheses and spaces', () => {
+  const within = (limit: number, run: () => unknown): void => {
+    const started = performance.now();
+    run();
+    expect(performance.now() - started).toBeLessThan(limit);
+  };
+  // Before, each of these took between 0.3 and 5 seconds.
+  within(100, () => commentLinks(`// ${'['.repeat(20_000)}`, syntaxes.go));
+  within(100, () => commentLinks(`// ${'[a]('.repeat(5_000)}`, syntaxes.go));
+  within(100, () => commentLinks(`// [a](${'('.repeat(20_000)}`, syntaxes.go));
+  within(100, () => linkUnderCursor(`// ${'['.repeat(20_000)}`, 20_003, syntaxes.go));
+  within(100, () => headingLine(`# a${' '.repeat(4_000)}x\n`, 'a'));
+  within(100, () => headings(`# a${' '.repeat(4_000)}x\n## ${'#'.repeat(4_000)} ${' '.repeat(4_000)}\n`));
+});
+
+test('an editor association whose pattern forms no valid expression is skipped', () => {
+  expect(defaultEditor({ '{*.md': 'broken', '*.md': 'vscode.markdown.editor' }, 'file', '/a/x.md')).toBe('vscode.markdown.editor');
+  expect(defaultEditor({ '*.md}': 'broken' }, 'file', '/a/x.md')).toBe('');
 });

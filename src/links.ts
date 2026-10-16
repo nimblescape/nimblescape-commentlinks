@@ -210,8 +210,14 @@ function skipLiteral(text: string, start: number, form: StringForm): number {
   return text.length;
 }
 
-/** linkPattern matches one Markdown link with a non-empty label and target. */
-const linkPattern = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+/**
+ * linkPattern matches one Markdown link with a non-empty label and target. The
+ * label holds no bracket and the target no parenthesis, so that each attempt
+ * stops at the next bracket or parenthesis: a line of thousands of brackets
+ * takes linear time. A label with a nested bracket is no link, as in
+ * Markdown, where `[a[b](t)` links only `b`.
+ */
+const linkPattern = /\[([^[\]\n]+)\]\(([^()\s]+)\)/g;
 
 /** schemePattern matches a target that starts with a URI scheme, such as https:. */
 const schemePattern = /^[a-z][a-z0-9+.-]*:/i;
@@ -273,6 +279,31 @@ export function headingSlug(heading: string): string {
 /** fencePattern matches the opening or closing line of a fenced code block. */
 const fencePattern = /^ {0,3}(`{3,}|~{3,})/;
 
+/** headingStart matches the start of a heading line: up to three spaces, one to six number signs and white space. */
+const headingStart = /^ {0,3}#{1,6}\s+/;
+
+/**
+ * headingText returns the text of a heading line without its number signs
+ * and without the number signs and the white space at its end, or undefined
+ * when the line is no heading. A text that consists of number signs keeps its
+ * first one. The end of the line is scanned without a regular expression, so
+ * that a line with thousands of spaces takes linear time.
+ * @param line - One line of a Markdown document.
+ * @returns The heading text, or undefined.
+ */
+export function headingText(line: string): string | undefined {
+  const start = headingStart.exec(line);
+  if (!start) return undefined;
+  const text = line.slice(start[0].length);
+  let end = text.length;
+  while (end > 1 && /\s/.test(text[end - 1])) end--;
+  while (end > 1 && text[end - 1] === '#') end--;
+  while (end > 1 && /\s/.test(text[end - 1])) end--;
+  const heading = text.slice(0, end);
+  // A heading without text has no anchor, and a line break inside the text ends the line, so neither is a heading.
+  return heading.trim() === '' || /[\r\u2028\u2029]/.test(heading) ? undefined : heading;
+}
+
 /**
  * headingLine returns the one-based line of the first heading of a Markdown
  * document whose anchor equals the fragment, or zero when no heading matches.
@@ -300,8 +331,8 @@ export function headingLine(markdown: string, fragment: string): number {
       fence = opening[1];
       continue;
     }
-    const match = /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
-    if (match && headingSlug(match[1]) === wanted) return i + 1;
+    const text = headingText(line);
+    if (text !== undefined && headingSlug(text) === wanted) return i + 1;
   }
   return 0;
 }
@@ -346,7 +377,8 @@ export function globPattern(glob: string): RegExp {
  * for a resource, as the associations of the setting name it, or an empty
  * string for the text editor. The first association whose pattern matches
  * wins, as in the editor. The value `default` names the text editor.
- * @param associations - The editor associations of the setting. A value that is no string is skipped.
+ * @param associations - The editor associations of the setting. A value that is no string, and a pattern that forms no
+ *   valid expression, are skipped.
  * @param scheme - The scheme of the resource.
  * @param path - The path of the resource.
  * @returns The identifier of the editor, or an empty string for the text editor.
@@ -356,7 +388,14 @@ export function defaultEditor(associations: Record<string, unknown> | undefined,
   const full = `${scheme}:${path}`.toLowerCase();
   for (const [pattern, editor] of Object.entries(associations ?? {})) {
     if (typeof editor !== 'string') continue;
-    if (globPattern(pattern.toLowerCase()).test(pattern.includes('/') ? full : name)) {
+    let glob: RegExp;
+    try {
+      glob = globPattern(pattern.toLowerCase());
+    } catch {
+      // A pattern that forms no valid expression, such as one with an open brace, matches nothing.
+      continue;
+    }
+    if (glob.test(pattern.includes('/') ? full : name)) {
       return editor === 'default' ? '' : editor;
     }
   }
@@ -387,8 +426,8 @@ export function headings(markdown: string): Heading[] {
       fence = opening[1];
       continue;
     }
-    const match = /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
-    if (match) found.push({ line: i + 1, slug: headingSlug(match[1]), text: match[1].trim() });
+    const text = headingText(line);
+    if (text !== undefined) found.push({ line: i + 1, slug: headingSlug(text), text: text.trim() });
   }
   return found;
 }
@@ -410,7 +449,8 @@ export function linkUnderCursor(text: string, offset: number, syntax: CommentSyn
   const span = commentSpans(text, syntax).find((s) => s.start <= offset && offset <= s.end);
   if (!span) return undefined;
   const before = text.slice(span.start, offset);
-  const match = /\[[^\]\n]*\]\(([^)\s]*)$/.exec(before);
+  // Without brackets in the label and parentheses in the target, as linkPattern, so that the search takes linear time.
+  const match = /\[[^[\]\n]*\]\(([^()\s]*)$/.exec(before);
   if (!match) return undefined;
   const target = match[1];
   if (schemePattern.test(target) || target.startsWith('/') || target.startsWith('#')) return undefined;
