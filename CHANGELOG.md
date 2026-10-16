@@ -13,8 +13,8 @@ require.
 ## 0.2.0
 
 **Links only inside the workspace:** a link in a comment now opens only a
-file inside a folder of the workspace. In a file that is not inside a folder
-of the workspace, it opens only a file inside the folder of that file. Before,
+file inside a folder of the workspace. A file that is not inside a folder of
+the workspace can also link to the files inside its own folder. Before,
 a target such as `../../../etc/hostname` could open any file of the computer,
 while the label hid the target. Such a link is now no link and stays fully
 visible. The command behind the links opens only the files that the links of
