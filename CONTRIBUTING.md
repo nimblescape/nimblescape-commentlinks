@@ -131,7 +131,7 @@ hidden target.
 The command opens only a file that a link of the window names: the link
 provider records the file of every link that it resolves, and the command
 does nothing for other arguments. Another extension, or a `command:` link of
-another source, so cannot open any file through it.
+another source, so cannot open any other file through it.
 
 ### Completion
 

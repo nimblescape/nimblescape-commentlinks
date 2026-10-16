@@ -20,9 +20,9 @@ cursor show the whole link, so that it can be edited.
 - For each link, it asks VS Code whether the target file exists. It reads a
   Markdown target when you follow a link to a heading or complete a heading,
   and it lists a folder when you complete a path.
-- A link opens only a file inside a folder of the workspace. In a file that
-  is not inside a folder of the workspace, a link opens only a file inside
-  the folder of that file.
+- A link opens only a file inside a folder of the workspace. A file that is
+  not inside a folder of the workspace can also link to the files inside its
+  own folder.
 - It changes no file and no setting, starts no process, makes no network
   connection and collects no telemetry.
 - It also runs in Restricted Mode, because it only reads files. It does not
@@ -37,9 +37,9 @@ resolves a relative target in this order, and the first existing file wins:
 2. Relative to the workspace folder.
 
 A target outside the folders of the workspace counts as no file, for example
-`../../../outside.md` from a file two folders below the workspace folder. In
-a file that is not inside a folder of the workspace, only a target inside the
-folder of that file counts.
+`../../../outside.md` from a file two folders below the workspace folder. For
+a file that is not inside a folder of the workspace, a target inside the
+folder of that file counts too.
 
 A click opens the target with the editor that VS Code uses for its file type.
 A fragment such as `#a-unit-001` opens a Markdown file at the heading with

@@ -227,6 +227,8 @@ async function fixture(goText: string, yamlText = '', looseText = '') {
   const config: Record<string, unknown> = {};
   const associations: Record<string, string> = {};
   const executed: unknown[][] = [];
+  /** folders lists the workspace folders of the fake window; the temporary workspace folder at the start. */
+  const folders = [root];
   /** stats counts the calls of the fake stat, by path. */
   const stats = new Map<string, number>();
   /** listen captures the listener of one editor event under its name. */
@@ -318,8 +320,11 @@ async function fixture(goText: string, yamlText = '', looseText = '') {
       },
     },
     workspace: {
-      /** The temporary workspace folder and every path inside it belong to it; another path belongs to no workspace folder. */
-      getWorkspaceFolder: (target: FakeUri) => (target.fsPath === root || inside(root, target.fsPath) ? { uri: uri(root) } : undefined),
+      /** A workspace folder and every path inside it belong to that folder; another path belongs to no workspace folder. */
+      getWorkspaceFolder: (target: FakeUri) => {
+        const folder = folders.find((candidate) => target.fsPath === candidate || inside(candidate, target.fsPath));
+        return folder === undefined ? undefined : { uri: uri(folder) };
+      },
       /** asRelativePath renders a path relative to the workspace root. */
       asRelativePath: (target: FakeUri) => path.relative(root, target.fsPath),
       /**
@@ -336,6 +341,7 @@ async function fixture(goText: string, yamlText = '', looseText = '') {
       onDidChangeTextDocument: listen('change'),
       onDidCloseTextDocument: listen('close'),
       onDidChangeConfiguration: listen('configuration'),
+      onDidChangeWorkspaceFolders: listen('folders'),
       /** openTextDocument returns the current text of a real temporary file. */
       openTextDocument: async (target: FakeUri): Promise<OpenedDocument> => {
         const text = await fs.readFile(target.fsPath, 'utf8');
@@ -427,6 +433,15 @@ async function fixture(goText: string, yamlText = '', looseText = '') {
       editor.selections = [{ start: position, end: position }];
       await listeners.selection({ textEditor: editor, selections: editor.selections });
     },
+    /** hide closes a visible editor of the fake window. */
+    hide: (editor: FakeEditor) => {
+      visible.splice(visible.indexOf(editor), 1);
+    },
+    /** setFolders replaces the workspace folders of the fake window and runs the folder listener. */
+    setFolders: (paths: string[]) => {
+      folders.splice(0, folders.length, ...paths);
+      return listeners.folders({});
+    },
     /** change gives a document a new version and text and runs the change listener, as an edit does. */
     change: (doc: FakeDocument, text: string) => {
       const changed = document(doc.uri.fsPath, doc.languageId, text);
@@ -456,7 +471,7 @@ test('links resolve relative to the file first and to the workspace folder secon
     ].join('\n'),
   );
   expect(plain(f.selector)).toStrictEqual(Object.keys(syntaxes).map((language) => ({ language })));
-  expect(f.subscriptions.length).toBe(9);
+  expect(f.subscriptions.length).toBe(11);
   const links = await f.links(f.go);
   expect(plain(links.map((link) => [link.target.scheme, link.target.path, link.tooltip]))).toStrictEqual([
     ['command', openCommand, 'Open internal/app/docs/local.md#section-two'],
@@ -534,7 +549,7 @@ test('the command opens the target with the default editor and requests the head
   expect(f.shown.length).toBe(shownBefore + 1);
 });
 
-test('a link opens only a file inside the workspace folder, or for a file outside the workspace inside its folder', async () => {
+test('a link opens only a file inside the workspace folder, or for a file outside the workspace also inside its folder', async () => {
   const f = await fixture(
     [
       'package app',
@@ -543,16 +558,22 @@ test('a link opens only a file inside the workspace folder, or for a file outsid
       '// Inside: [unit](../../docs/architecture/unit.md)',
     ].join('\n'),
     '',
-    ['package x', '// Near: [near](docs/near.md)', '// Up and out: [secret](../secret.md)'].join('\n'),
+    [
+      'package x',
+      '// Near: [near](docs/near.md)',
+      '// Up and out: [secret](../secret.md)',
+      '// Into the workspace: [unit](../workspace/docs/architecture/unit.md)',
+    ].join('\n'),
   );
   // Both targets name secret.md beside the workspace folder, which exists, and get no link and no stat.
   const links = await f.links(f.go);
   expect(plain(links.map((link) => link.tooltip))).toStrictEqual(['Open docs/architecture/unit.md']);
   expect(f.stats.has(path.join(f.outer, 'secret.md'))).toBe(false);
-  // A file outside the folders of the workspace links inside its own folder only.
+  // A file outside the folders of the workspace links inside its own folder and inside the workspace folder.
   const loose = await f.links(f.loose);
   expect(plain(loose.map((link) => queryOf(link)[0]))).toStrictEqual([
     { scheme: 'file', authority: '', path: path.join(f.outer, 'loose', 'docs', 'near.md') },
+    { scheme: 'file', authority: '', path: path.join(f.root, 'docs', 'architecture', 'unit.md') },
   ]);
   // The hidden part of the link without a target stays visible.
   const editor = f.editor(f.go);
@@ -602,6 +623,47 @@ test('one version of a document is resolved once, and an edit refreshes the hidi
   await new Promise((resolve) => setTimeout(resolve, 400));
   expect(f.stats.get(unit)).toBe(2);
   expect(plain(editor.decorations)).toHaveLength(2);
+});
+
+test('a refresh that started before an edit applies nothing, and a closed editor is not refreshed after the pause', async () => {
+  const text = 'package app\n// [unit](docs/architecture/unit.md)\n';
+  const f = await fixture(text);
+  const editor = f.editor(f.go);
+  const unit = path.join(f.root, 'docs', 'architecture', 'unit.md');
+  // The cursor move resolves the first version; the edit comes before that resolution ends.
+  const moved = f.cursor(editor, 0);
+  await f.change(f.go, `package app\nXX${text.slice('package app\n'.length)}`);
+  await moved;
+  expect(editor.decorations).toBe(undefined);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(plain(editor.decorations)).toHaveLength(2);
+  const resolutions = f.stats.get(unit);
+  // An editor that closes during the pause gets no refresh, and its document is not resolved again.
+  await f.change(f.go, text);
+  f.hide(editor);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(f.stats.get(unit)).toBe(resolutions);
+  // The end of the extension stops the refreshes that wait for their pause.
+  const other = f.editor(f.go);
+  await f.change(f.go, `${text}\n`);
+  for (const subscription of f.subscriptions as Array<{ dispose(): void }>) subscription.dispose();
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(f.stats.get(unit)).toBe(resolutions);
+  expect(other.decorations).toBe(undefined);
+});
+
+test('a change of the workspace folders resolves every document again', async () => {
+  const f = await fixture('package app\n// [unit](docs/architecture/unit.md)\n');
+  const editor = f.editor(f.go);
+  await f.cursor(editor, 0);
+  expect(await f.links(f.go)).toHaveLength(1);
+  expect(plain(editor.decorations)).toHaveLength(2);
+  // Without a workspace folder, the target relative to the workspace folder counts no more.
+  await f.setFolders([]);
+  expect(await f.links(f.go)).toStrictEqual([]);
+  expect(plain(editor.decorations)).toStrictEqual([]);
+  await f.setFolders([f.root]);
+  expect(await f.links(f.go)).toHaveLength(1);
 });
 
 test('a link followed after a mouse click keeps the cursor where it was before the click', async () => {
@@ -701,7 +763,7 @@ test('the completion lists no folder and reads no heading outside the folders th
   expect(await f.complete(f.go, 2, lines[2].length)).toBe(undefined);
   // ../../ is the workspace folder itself.
   expect(plain((await f.complete(f.go, 3, lines[3].length))!.map((item) => item.label))).toStrictEqual(['config.yaml', 'docs/', 'internal/']);
-  // A file outside the folders of the workspace completes inside its own folder only.
+  // For a file outside the folders of the workspace, the folder above its own lies outside and lists nothing.
   expect(await f.complete(f.loose, 1, '// [x](../'.length)).toStrictEqual([]);
   expect(plain((await f.complete(f.loose, 2, '// [x](docs/'.length))!.map((item) => item.label))).toStrictEqual(['near.md']);
 });

@@ -111,19 +111,22 @@ export function activate(context: vscode.ExtensionContext): void {
     if (generations.get(editor) === generation) editor.setDecorations(hiding, ranges);
   };
   /** changes keeps, per editor, the timer of the refresh after a change of its document. */
-  const changes = new WeakMap<vscode.TextEditor, ReturnType<typeof setTimeout>>();
+  const changes = new Map<vscode.TextEditor, ReturnType<typeof setTimeout>>();
   /**
    * refreshAfterChange refreshes an editor after a pause of changeDelay
    * without a further change, so that typing resolves the links once and not
-   * at every key.
+   * at every key. A refresh that started before the change computed the
+   * ranges of the old text, so it applies nothing. An editor that closed
+   * during the pause is not refreshed.
    */
   const refreshAfterChange = (editor: vscode.TextEditor): void => {
+    generations.set(editor, (generations.get(editor) ?? 0) + 1);
     clearTimeout(changes.get(editor));
     changes.set(
       editor,
       setTimeout(() => {
         changes.delete(editor);
-        void refresh(editor);
+        if (vscode.window.visibleTextEditors.includes(editor)) void refresh(editor);
       }, changeDelay),
     );
   };
@@ -148,6 +151,13 @@ export function activate(context: vscode.ExtensionContext): void {
   };
   context.subscriptions.push(
     hiding,
+    {
+      /** dispose stops the refreshes that still wait for the pause after a change. */
+      dispose: () => {
+        for (const timer of changes.values()) clearTimeout(timer);
+        changes.clear();
+      },
+    },
     vscode.commands.registerCommand(openCommand, (parts: unknown, fragment: unknown) => {
       // Only the file of a link of this window: the command opens no file that another caller names.
       const target = targetUri(parts);
@@ -199,6 +209,11 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.workspace.onDidCloseTextDocument((document) => resolved.delete(document.uri.toString())),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      // The folders of the workspace decide which files a link may name: every document resolves again.
+      resolved.clear();
+      refreshAll();
+    }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(settingsSection)) refreshAll();
     }),
@@ -432,7 +447,8 @@ function targetUri(parts: unknown): vscode.Uri | undefined {
   try {
     return vscode.Uri.from({ scheme, authority, path });
   } catch {
-    // Uri.from refuses components that form no URI, such as an empty scheme.
+    // Uri.from refuses components that form no URI, such as a scheme with a space, or a path that starts with two
+    // slashes without an authority.
     return undefined;
   }
 }
