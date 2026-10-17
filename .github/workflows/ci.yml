@@ -10,7 +10,8 @@
 # "release rules" checks the release rules of CONTRIBUTING.md in the source
 # (scripts/release-checks.mjs). This workflow publishes nothing: the release
 # workflow calls it for the commit of a version and publishes the VSIX of that
-# call.
+# call. A change of this file changes the release process: its pull request
+# needs a dry run (rule 4).
 
 name: CI
 
