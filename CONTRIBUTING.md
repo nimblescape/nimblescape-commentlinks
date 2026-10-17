@@ -167,7 +167,8 @@ file, runs no process and needs no opt-in. A target counts only inside a
 folder of the workspace, or, for a file outside the folders of the
 workspace, inside the folder of that file; the completion lists and reads
 nothing outside these folders either. So a label cannot hide a link to any
-other file of the computer.
+other file of the computer. A symbolic link inside these folders is the
+exception (see [Known limits](docs/security.md#known-limits)).
 
 The patterns that find the links and the headings take linear time: a label
 holds no bracket, a target no parenthesis, and the end of a heading line is

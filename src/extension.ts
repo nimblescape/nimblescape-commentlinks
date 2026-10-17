@@ -13,7 +13,8 @@
  * directory of the file first and against the workspace folder second.
  * A target must lie inside a folder of the workspace, or, for a file outside
  * the folders of the workspace, inside the folder of that file, so that a
- * label cannot hide a link to any other file of the computer. Every link
+ * label cannot hide a link to any other file of the computer (a symbolic link
+ * inside these folders is the exception: docs/security.md, Known limits). Every link
  * opens through a command of the extension, which opens only the targets that
  * its links name, with the editor that the window associates with it. A Markdown
  * target with a fragment opens at the heading the fragment names when that
