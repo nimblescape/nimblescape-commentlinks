@@ -22,7 +22,7 @@ cursor show the whole link, so that it can be edited.
   and it lists a folder when you complete a path.
 - A link opens only a file inside a folder of the workspace. A file that is
   not inside a folder of the workspace can also link to the files inside its
-  own folder.
+  own folder and its subfolders.
 - It changes no file and no setting, starts no process, makes no network
   connection and collects no telemetry.
 - It also runs in Restricted Mode, because it only reads files. It does not

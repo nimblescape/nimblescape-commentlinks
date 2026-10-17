@@ -5,7 +5,7 @@ report problems in the
 [issues on GitHub](https://github.com/nimblescape/nimblescape-markdown-comment-links/issues).
 Search the open and closed issues first. The README describes
 [which targets a link resolves](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/README.md#link-resolution)
-and [in which files](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/README.md#files).
+and [in which files it finds links](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/README.md#files).
 
 ## What to include in a report
 
@@ -19,8 +19,8 @@ and [in which files](https://github.com/nimblescape/nimblescape-markdown-comment
 - The language of the file, the comment line with the link, and the path of
   the file and of the target, relative to the workspace folder. For a link to
   a heading, also the heading line of the target.
-- When the target opens in another editor than the text editor: the value of
-  the setting `workbench.editorAssociations`.
+- When the target opens in an editor other than the text editor: the value
+  of the setting `workbench.editorAssociations`.
 - What you did, what you expected, and what happened, with the exact text of
   each message.
 
