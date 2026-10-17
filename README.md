@@ -28,6 +28,9 @@ cursor show the whole link, so that it can be edited.
 - It also runs in Restricted Mode, because it only reads files. It does not
   run in VS Code for the Web.
 
+[Security](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
+describes each step and where its protection ends.
+
 ## Link resolution
 
 The extension reads links of the form `[label](target)` in comments. It

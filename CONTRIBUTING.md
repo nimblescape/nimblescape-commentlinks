@@ -1,8 +1,9 @@
 # Contributing
 
 This guide explains the files, the development, the tests and the release of
-the extension. The [README](README.md) describes the use in short, and the
-section [How the extension works](#how-the-extension-works) keeps the details.
+the extension. The [README](README.md) describes the use in short, the
+section [How the extension works](#how-the-extension-works) keeps the details,
+and [security.md](docs/security.md) describes the security model.
 
 ## Files
 
@@ -13,6 +14,7 @@ section [How the extension works](#how-the-extension-works) keeps the details.
 | `src/extension.test.ts`, `src/links.test.ts` | The tests of the two modules, with vitest. The extension test loads `src/extension.ts` with a fake editor API and also checks the manifest, `.vscodeignore` and the documents. |
 | `dist/` | The bundle `dist/extension.js`, built by `esbuild.mjs` and kept out of Git. |
 | `resources/icon.png`, `resources/icon.svg` | The Marketplace icon (256 × 256 PNG, because the Marketplace takes no SVG icon) and its source: a comment bubble with a link on the tile of the nimblescape extensions. |
+| `docs/security.md` | The security model: what the extension reads, which files a link opens, and where its protection ends. The README links it. |
 | `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. A production build (`--production`) is minified and has no source map. |
 | `tsconfig.json` | The TypeScript settings of the type check: strict, and no output, because esbuild builds the bundle. |
 | `vitest.config.mts` | The settings of the tests: the files `src/**/*.test.ts` and `scripts/**/*.test.mjs` on Node. |
