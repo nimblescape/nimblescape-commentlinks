@@ -44,6 +44,11 @@ The package now holds the code of the extension as readable JavaScript: not
 minified, and with the names of the source, so that anyone can compare it
 with the source. The code is about 21 KB instead of about 10 KB.
 
+The new file
+[SUPPORT.md](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/SUPPORT.md),
+also in the package, says how to ask a question and how to report a
+problem, and the README links it.
+
 ## 0.1.8
 
 Maintenance release: the version follows nimblescape Devspaces 0.1.8; the extension behaves as in 0.1.7.

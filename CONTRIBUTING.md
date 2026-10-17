@@ -21,7 +21,7 @@ and [security.md](docs/security.md) describes the security model.
 | `package.json` | The extension manifest. The section [Manifest](#manifest) explains it. |
 | `package-lock.json` | The locked development tools. npm writes this file, and nobody edits it by hand. |
 | `.node-version` | The Node release of the development tools. `actions/setup-node` in the workflows and local Node version managers read it. |
-| `.vscodeignore` | Lists the files of the package: `dist/extension.js`, `resources/icon.png`, `package.json`, `README.md`, `CHANGELOG.md` and `LICENSE`. |
+| `.vscodeignore` | Lists the files of the package: `dist/extension.js`, `resources/icon.png`, `package.json`, `README.md`, `CHANGELOG.md`, `LICENSE` and `SUPPORT.md`. |
 | `.github/workflows/ci.yml` | Checks the types, tests and packages every push to `main`, every pull request and the commit of every release, and checks the [release rules](#release-rules) of the source. The release publishes the VSIX of this workflow, so a change of it needs a dry run (rule 4 of the [release rules](#release-rules)). |
 | `.github/workflows/release.yml` | Releases a version on a manual start: commits the version to a temporary branch, tests and packages it with `ci.yml`, and only then moves `main` to it, creates its tag and GitHub release and publishes it to the Marketplace. A dry run tests without a change. The section [Release](#release) explains it. |
 | `.github/workflows/release-dry-run.yml` | Fails on a pull request that changes the release process (`release.yml`, `ci.yml` or `scripts/release-checks.mjs`) until a dry run on its branch tested the change (rule 4 of the [release rules](#release-rules)). |
@@ -73,7 +73,7 @@ the tools, the build gives the same file.
 - The version is the only source of the package version, and the tag of a release names it.
 - The engine range defines the compatible VS Code versions. `@types/vscode` stays at the lowest version of that range.
 - `main` selects the bundle `dist/extension.js`. A test checks it.
-- `.vscodeignore` lists the files of the package, not a `files` field: it ignores everything and keeps the bundle, the icon, `package.json`, `README.md`, `CHANGELOG.md` and `LICENSE`. A test checks the list and that the bundle leaves out the editor API only.
+- `.vscodeignore` lists the files of the package, not a `files` field: it ignores everything and keeps the bundle, the icon, `package.json`, `README.md`, `CHANGELOG.md`, `LICENSE` and `SUPPORT.md`. A test checks the list and that the bundle leaves out the editor API only.
 - `extensionKind` selects the workspace host.
 - The activation events activate the extension when a document of a listed language opens. A test keeps them equal to the language table of `src/links.ts`.
 - The configuration contribution declares the setting that turns the hiding of targets off.
@@ -85,8 +85,9 @@ and the settings table of the README follows the configuration
 contribution. A test checks that the README names every setting.
 
 `README.md` is the page of the Marketplace and `CHANGELOG.md` its tab
-"Changelog". vsce does not rewrite relative links
-(`--no-rewrite-relative-links`), so both use full `https://github.com/…`
+"Changelog". `SUPPORT.md` says how to ask a question and how to report a
+problem; it is in the package too. vsce does not rewrite relative links
+(`--no-rewrite-relative-links`), so the three use full `https://github.com/…`
 links outside code. A test checks it.
 
 ## How the extension works

@@ -788,7 +788,7 @@ test('the package includes the entry point and every local module that it requir
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'));
   expect(ignore[0], '.vscodeignore ignores everything first').toBe('**');
-  for (const file of ['dist/extension.js', 'resources/icon.png', 'package.json', 'README.md', 'CHANGELOG.md', 'LICENSE']) {
+  for (const file of ['dist/extension.js', 'resources/icon.png', 'package.json', 'README.md', 'CHANGELOG.md', 'LICENSE', 'SUPPORT.md']) {
     expect(ignore, `${file} is missing from the files of the package`).toContain(`!${file}`);
   }
   const pending = ['src/extension.ts'];
@@ -812,7 +812,7 @@ test('the package includes the entry point and every local module that it requir
 // examples in code show relative targets. A relative link outside code would
 // therefore break on the Marketplace page.
 test('the documents of the package link outside code to web addresses or fragments only', async () => {
-  for (const name of ['README.md', 'CHANGELOG.md']) {
+  for (const name of ['README.md', 'CHANGELOG.md', 'SUPPORT.md']) {
     const text = (await fs.readFile(path.join(repository, name), 'utf8'))
       .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[^\n]*$/gm, '')
       .replace(/`[^`\n]*`/g, '');
