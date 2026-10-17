@@ -40,6 +40,10 @@ earlier IDs of the extension. The new document
 describes what the extension reads, which files a link opens and where its
 protection ends, and the README links it.
 
+The package now holds the code of the extension as readable JavaScript: not
+minified, and with the names of the source, so that anyone can compare it
+with the source. The code is about 21 KB instead of about 10 KB.
+
 ## 0.1.8
 
 Maintenance release: the version follows nimblescape Devspaces 0.1.8; the extension behaves as in 0.1.7.

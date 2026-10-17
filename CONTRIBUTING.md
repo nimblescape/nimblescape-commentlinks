@@ -15,7 +15,7 @@ and [security.md](docs/security.md) describes the security model.
 | `dist/` | The bundle `dist/extension.js`, built by `esbuild.mjs` and kept out of Git. |
 | `resources/icon.png`, `resources/icon.svg` | The Marketplace icon (256 × 256 PNG, because the Marketplace takes no SVG icon) and its source: a comment bubble with a link on the tile of the nimblescape extensions. |
 | `docs/security.md` | The security model: what the extension reads, which files a link opens, and where its protection ends. The README links it. |
-| `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. A production build (`--production`) is minified and has no source map. |
+| `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. The bundle is readable JavaScript: not minified. A production build (`--production`) has no source map. |
 | `tsconfig.json` | The TypeScript settings of the type check: strict, and no output, because esbuild builds the bundle. |
 | `vitest.config.mts` | The settings of the tests: the files `src/**/*.test.ts` and `scripts/**/*.test.mjs` on Node. |
 | `package.json` | The extension manifest. The section [Manifest](#manifest) explains it. |
@@ -54,6 +54,16 @@ release in `.node-version` for the tools and CI, and the runtime of VS Code
 The launch configuration "Run the extension" builds the bundle and starts a
 second VS Code window that loads the extension from this folder, so that a
 change can be tried without a package.
+
+## Reviewing the package
+
+The VSIX holds the bundle `dist/extension.js` as readable JavaScript: not
+minified, with the names of the source, and with a comment that names each
+source file. To compare a VSIX with the sources, unpack it (a VSIX is a ZIP
+file), run `npm ci --ignore-scripts` and `npm run vscode:prepublish` at the
+tag of its version, and compare `extension/dist/extension.js` of the VSIX
+with `dist/extension.js`. With the same sources and the locked versions of
+the tools, the build gives the same file.
 
 ## Manifest
 
