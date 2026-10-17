@@ -35,7 +35,10 @@ valid glob, for example one with an open brace, no longer stops the links to
 headings.
 
 The README now says what the extension does on your computer, and names the
-earlier IDs of the extension.
+earlier IDs of the extension. The new document
+[Security](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/docs/security.md)
+describes what the extension reads, which files a link opens and where its
+protection ends, and the README links it.
 
 ## 0.1.8
 
