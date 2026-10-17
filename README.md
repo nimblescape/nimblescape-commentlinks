@@ -88,6 +88,6 @@ only ID is `nimblescape.nimblescape-markdown-comment-links`.
 
 ---
 
-[Change log](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/CHANGELOG.md) · [Contributing](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/CONTRIBUTING.md) · [Issues](https://github.com/nimblescape/nimblescape-markdown-comment-links/issues) · [Source](https://github.com/nimblescape/nimblescape-markdown-comment-links)
+[Change log](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/CHANGELOG.md) · [Contributing](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/CONTRIBUTING.md) · [Support](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/SUPPORT.md) · [Issues](https://github.com/nimblescape/nimblescape-markdown-comment-links/issues) · [Source](https://github.com/nimblescape/nimblescape-markdown-comment-links)
 
 © 2026 Hannes Stauss (scalarion@nimblescape.com) · [MIT License](https://github.com/nimblescape/nimblescape-markdown-comment-links/blob/main/LICENSE).
