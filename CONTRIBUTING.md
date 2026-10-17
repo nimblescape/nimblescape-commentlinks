@@ -27,6 +27,7 @@ section [How the extension works](#how-the-extension-works) keeps the details.
 | `.github/dependabot.yml` | Proposes weekly updates of the development tools and of the pinned actions. |
 | `scripts/marketplace-setup.sh` | Sets up the Marketplace publishing of the repository. The section [Setup of a repository](#setup-of-a-repository) explains it. |
 | `scripts/release-checks.mjs`, `scripts/release-checks.test.mjs` | The checks of the [release rules](#release-rules), which the workflows run, and their test. |
+| `scripts/install-local.mjs`, `scripts/uninstall-local.mjs` | Install the built package into every profile of the VS Code of this computer, and remove it again. |
 | `.vscode/launch.json`, `.vscode/tasks.json` | Build the bundle and start a VS Code window that loads the extension from this folder. |
 
 ## Development
@@ -45,7 +46,8 @@ release in `.node-version` for the tools and CI, and the runtime of VS Code
 | `npm test` | Runs the tests with vitest. The tests touch no installed editor. |
 | `npm run build` | Bundles `dist/extension.js` with a source map. |
 | `npm run package` | Builds `nimblescape-markdown-comment-links-<version>.vsix` with vsce, which first runs the production build (`vscode:prepublish`). vsce also validates the manifest and the README. |
-| `code --install-extension nimblescape-markdown-comment-links-<version>.vsix` | Installs the built package. Reload the window after an update of an active extension. |
+| `npm run install-local` | Builds the package and installs it into every profile of the VS Code of this computer; `-- --profile <name>` installs into one profile. Reload the window after an update of an active extension. |
+| `npm run uninstall-local` | Removes `nimblescape.nimblescape-markdown-comment-links` from every profile of the VS Code of this computer; `-- --profile <name>` removes it from one profile. |
 
 The launch configuration "Run the extension" builds the bundle and starts a
 second VS Code window that loads the extension from this folder, so that a
