@@ -86,7 +86,11 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   another extension, or a `command:` link of another source, cannot open any
   other file through it.
 - **The completion.** While you write a link, the completion lists folders
-  and reads Markdown files only inside the same folders.
+  and reads Markdown files only inside the same folders. A chosen heading
+  fills only an empty label of the link, with the text of the heading
+  without brackets. A heading whose text holds the end of a block comment of
+  the language, such as `*/` or `-->`, fills no label, so that the text of a
+  Markdown file cannot end the comment and add code to the file.
 - **The editor.** The command opens the target with the editor that the
   window associates with its file type (the setting
   `workbench.editorAssociations`). For a fragment, the command reads the text

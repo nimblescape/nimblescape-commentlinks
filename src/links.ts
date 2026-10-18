@@ -62,12 +62,15 @@ export interface Heading {
 /**
  * TargetBeingWritten is the target of a link that is being written: the
  * offset where the target starts and the text of the target before the
- * cursor, split into the path part and the fragment part.
+ * cursor, split into the path part and the fragment part, and the label of
+ * the link with the offset where the label starts.
  */
 export interface TargetBeingWritten {
   start: number;
   path: string;
   fragment: string | undefined;
+  labelStart: number;
+  label: string;
 }
 
 /**
@@ -433,13 +436,30 @@ export function headings(markdown: string): Heading[] {
 }
 
 /**
+ * headingLabel returns the label that a link being written with an empty
+ * label takes from the heading that its completion chooses: the text of the
+ * heading without brackets, which would end the label, and with single
+ * spaces. It returns undefined when no text remains, or when the text holds
+ * the end of a block comment of the syntax, which would end the comment.
+ * @param text - The text of the heading.
+ * @param syntax - The comment syntax of the language.
+ * @returns The label, or undefined.
+ */
+export function headingLabel(text: string, syntax: CommentSyntax): string | undefined {
+  const label = text.replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+  if (label === '' || syntax.block.some(([, close]) => label.includes(close))) return undefined;
+  return label;
+}
+
+/**
  * linkUnderCursor returns the target that a Markdown link is being written
  * with at an offset of source text of the given syntax, or undefined when
  * the offset is outside a comment, outside the target part of a link, or in
  * a target that is no local relative path, such as a web address or an
  * absolute path. The result carries the text of the target before the
- * offset, split into the path part and the fragment part, and the offset
- * where the target starts.
+ * offset, split into the path part and the fragment part, the offset where
+ * the target starts, and the label of the link with the offset where the
+ * label starts.
  * @param text - Complete source text.
  * @param offset - The offset of the cursor.
  * @param syntax - The comment syntax of the language.
@@ -450,14 +470,16 @@ export function linkUnderCursor(text: string, offset: number, syntax: CommentSyn
   if (!span) return undefined;
   const before = text.slice(span.start, offset);
   // Without brackets in the label and parentheses in the target, as linkPattern, so that the search takes linear time.
-  const match = /\[[^[\]\n]*\]\(([^()\s]*)$/.exec(before);
+  const match = /\[([^[\]\n]*)\]\(([^()\s]*)$/.exec(before);
   if (!match) return undefined;
-  const target = match[1];
+  const [, label, target] = match;
   if (schemePattern.test(target) || target.startsWith('/') || target.startsWith('#')) return undefined;
   const hashIndex = target.indexOf('#');
   return {
     start: offset - target.length,
     path: hashIndex === -1 ? target : target.slice(0, hashIndex),
     fragment: hashIndex === -1 ? undefined : target.slice(hashIndex + 1),
+    labelStart: span.start + match.index + 1,
+    label,
   };
 }

@@ -86,6 +86,19 @@ class DocumentLink {
   }
 }
 
+/** TextEdit keeps a range and its new text, as the editor API does. */
+class TextEdit {
+  range: Range;
+  newText: string;
+  constructor(range: Range, newText: string) {
+    this.range = range;
+    this.newText = newText;
+  }
+  static replace(range: Range, newText: string): TextEdit {
+    return new TextEdit(range, newText);
+  }
+}
+
 /** CompletionItem keeps a label and a kind, as the editor API does. */
 class CompletionItem {
   label: string;
@@ -94,6 +107,7 @@ class CompletionItem {
   declare range?: Range;
   declare sortText?: string;
   declare command?: { command: string; title: string };
+  declare additionalTextEdits?: TextEdit[];
   constructor(label: string, kind: number) {
     this.label = label;
     this.kind = kind;
@@ -276,6 +290,7 @@ async function fixture(goText: string, yamlText = '', looseText = '') {
     },
     CompletionItem,
     CompletionItemKind: { File: 16, Reference: 17, Folder: 18 },
+    TextEdit,
     languages: {
       /** Capture the completion registration of the extension with its trigger characters. */
       registerCompletionItemProvider: (_value: unknown, given: CompletionProvider, ...characters: string[]) => {
@@ -750,9 +765,33 @@ test('a link being written completes folders, files and headings, and a web link
     ['a-unit-001', 17, 'A-UNIT-001'],
   ]);
   expect(plain(heading[0].range)).toStrictEqual({ start: { line: 3, character: 41 }, end: { line: 3, character: 42 } });
+  expect(heading.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
   expect(await f.complete(f.go, 4, lines[4].length)).toBe(undefined);
   expect(await f.complete(f.go, 5, lines[5].length - 1)).toBe(undefined);
   expect(await f.complete(f.markdown, 1, lines[1].length)).toBe(undefined);
+});
+
+test('a chosen heading fills the empty label of a link being written and keeps a written label', async () => {
+  const lines = [
+    'package app',
+    '// Assures: [](docs/architecture/unit.md#a',
+    '// Assures: [ ](docs/architecture/unit.md#',
+    '// Assures: [mine](docs/architecture/unit.md#a',
+  ];
+  const f = await fixture(lines.join('\n'));
+  const label = (line: number, end: number) => ({ start: { line, character: 13 }, end: { line, character: end } });
+  const empty = (await f.complete(f.go, 1, lines[1].length))!;
+  expect(plain(empty.map((item) => [item.label, item.additionalTextEdits]))).toStrictEqual([
+    ['unit', [{ range: label(1, 13), newText: 'Unit' }]],
+    ['a-unit-001', [{ range: label(1, 13), newText: 'A-UNIT-001' }]],
+  ]);
+  const blank = (await f.complete(f.go, 2, lines[2].length))!;
+  expect(plain(blank.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(2, 14), newText: 'Unit' }],
+    [{ range: label(2, 14), newText: 'A-UNIT-001' }],
+  ]);
+  const written = (await f.complete(f.go, 3, lines[3].length))!;
+  expect(written.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
 });
 
 test('the completion lists no folder and reads no heading outside the folders that a link may name', async () => {

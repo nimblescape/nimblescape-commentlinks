@@ -14,6 +14,7 @@ import {
   commentSpans,
   defaultEditor,
   globPattern,
+  headingLabel,
   headingLine,
   headings,
   headingSlug,
@@ -140,22 +141,43 @@ test('a link being written is found in a comment only and only for a local relat
     '// [z](docs/a.md#a-uni',
     '// [w](https://x/',
     '// [v](/etc/',
+    '// [](docs/b.md#',
   ].join('\n');
   const at = (needle: string): number => source.indexOf(needle) + needle.length;
   expect(linkUnderCursor(source, at('docs/arch'), syntaxes.go)).toStrictEqual({
     start: source.indexOf('docs/arch'),
     path: 'docs/arch',
     fragment: undefined,
+    labelStart: source.indexOf('x]'),
+    label: 'x',
   });
   expect(linkUnderCursor(source, at('"[y](docs/'), syntaxes.go)).toBe(undefined);
   expect(linkUnderCursor(source, at('a.md#a-uni'), syntaxes.go)).toStrictEqual({
     start: source.indexOf('docs/a.md'),
     path: 'docs/a.md',
     fragment: 'a-uni',
+    labelStart: source.indexOf('z]'),
+    label: 'z',
+  });
+  expect(linkUnderCursor(source, at('b.md#'), syntaxes.go)).toStrictEqual({
+    start: source.indexOf('docs/b.md'),
+    path: 'docs/b.md',
+    fragment: '',
+    labelStart: source.indexOf('[](') + 1,
+    label: '',
   });
   expect(linkUnderCursor(source, at('https://x/'), syntaxes.go)).toBe(undefined);
   expect(linkUnderCursor(source, at('/etc/'), syntaxes.go)).toBe(undefined);
   expect(linkUnderCursor(source, 5, syntaxes.go)).toBe(undefined);
+});
+
+test('the label from a heading drops brackets, keeps single spaces and never ends a block comment', () => {
+  expect(headingLabel('R-ORDER-003', syntaxes.go)).toBe('R-ORDER-003');
+  expect(headingLabel('  [Draft]   order  total ', syntaxes.go)).toBe('Draft order total');
+  expect(headingLabel('[]', syntaxes.go)).toBe(undefined);
+  expect(headingLabel('Ends */ here', syntaxes.go)).toBe(undefined);
+  expect(headingLabel('Ends --> here', syntaxes.html)).toBe(undefined);
+  expect(headingLabel('Ends */ here', syntaxes.yaml)).toBe('Ends */ here');
 });
 
 test('the default editor of a resource follows the editor associations as the editor matches them', () => {

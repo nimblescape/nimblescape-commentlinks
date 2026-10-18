@@ -3,6 +3,13 @@
 Each section lists the changes of one released version. The release workflow
 takes the section of a version as the notes of its GitHub release.
 
+## 0.2.0
+
+- A link can start with an empty label. Write `[](`, complete the path, type
+  `#` and choose a heading: the text of the heading becomes the label, for
+  example `[R-ORDER-003](docs/requirements.md#r-order-003)`. A label that you
+  wrote stays as it is.
+
 ## 0.1.0
 
 The first version.
