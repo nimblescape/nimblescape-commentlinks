@@ -14,6 +14,12 @@ takes the section of a version as the notes of its GitHub release.
   letters (also with accents), digits, spaces and the characters
   `. , ( ) _ / + -`. A label with other text stays as it is, and a name or a
   heading without letters or digits fills no label.
+- A second chosen file or heading corrects the label: it replaces the name of
+  another file of the list, or the text of another heading of the file.
+- The completion offers only names of letters, digits and the characters
+  `. , _ + -`. A file or a folder with a space, a parenthesis, `#`, `--` or a
+  hyphen at the end of its name is no longer offered, because such a name
+  ends the target or can end the comment.
 
 ## 0.1.0
 

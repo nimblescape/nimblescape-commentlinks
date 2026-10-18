@@ -162,26 +162,28 @@ completes its target. Before a number sign it offers the folders and files of
 the directory that the target names, resolved like a link: the entries beside
 the file first, then the entries of the workspace folder. It offers only names
 that `targetName` in `src/links.ts` accepts: letters, combining marks, digits
-and the characters `. , _ + -`, without `--` and without invisible characters,
-so that no inserted name ends the target or the comment. A folder inserts its
-name with a slash and opens the next completion. After the number sign of a
-Markdown target it offers the anchors of the headings of that document, with
-the heading text as the detail. When the label of the link is empty or holds
-only white space, a chosen file also writes its name into the label, and a
-chosen heading its text (`labelFrom` in `src/links.ts`). A file also replaces
-a label that equals the name of another listed file, so that a second choice
-corrects the label, and a heading replaces a label that equals the name of its
-file, as the completion of the file wrote it. The label keeps only letters,
-combining marks, digits, spaces and the characters `. , ( ) _ / + -`; every
-other character, also an invisible one (a default ignorable code point),
-becomes a space, a run of hyphens becomes one hyphen and a run of spaces one
-space. So no label ends or opens a comment, holds `--` in an XML comment,
-breaks the line, ends a quoted string, holds `$`, a backtick or a backslash,
-or forms a comment that a tool reads, such as `#__PURE__`, `@ts-ignore` or a
-modeline of Vim (`vim: set …`). A name or a heading without letters or digits
-fills no label. The completion opens on `(`, `/` and `#`, and on the
-completion key of the editor. A link to a web address, an absolute path or a
-bare fragment gets no completion.
+and the characters `. , _ + -`, without `--`, without a hyphen at the end
+(which forms `-->` with a `->` after the cursor) and without invisible
+characters, so that no inserted name ends the target or the comment. A folder
+inserts its name with a slash and opens the next completion. After the number
+sign of a Markdown target it offers the anchors of the headings of that
+document, with the heading text as the detail. When the label of the link is
+empty or holds only white space, a chosen file also writes its name into the
+label, and a chosen heading its text (`labelFrom` in `src/links.ts`). A file
+also replaces a label that equals the name of another listed file, and a
+heading a label that equals the name of its file, as the completion of the
+file wrote it, or the text of another heading of that file. So a second choice
+corrects the label of the first. The label keeps only letters, combining
+marks, digits, spaces and the characters `. , ( ) _ / + -`; every other
+character, also an invisible one (a default ignorable code point), becomes a
+space, a run of hyphens becomes one hyphen and a run of spaces one space. So
+no label ends or opens a comment, holds `--` in an XML comment, breaks the
+line, ends a quoted string, holds `$`, a backtick or a backslash, or forms a
+comment that a tool reads, such as `#__PURE__`, `@ts-ignore` or a modeline of
+Vim (`vim: set …`). A name or a heading without letters or digits fills no
+label. The completion opens on `(`, `/` and `#`, and on the completion key of
+the editor. A link to a web address, an absolute path or a bare fragment gets
+no completion.
 
 ### Scope and limits
 
