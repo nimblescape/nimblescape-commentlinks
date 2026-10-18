@@ -437,9 +437,9 @@ export function headings(markdown: string): Heading[] {
 
 /**
  * labelOthers matches a run of characters that a label from a heading or a
- * file name does not keep: all but letters, combining marks, digits, the space and the
- * characters . , ( ) _ / + -. Without * and > no label ends a block
- * comment or opens one, without brackets no label ends the label, without
+ * file name does not keep: all but letters, combining marks, digits, the
+ * space and the characters . , ( ) _ / + -. Without * and > no label ends a
+ * block comment or opens one, without brackets no label ends the label, without
  * quotes no label ends a string that the scanner takes for a comment,
  * without $, backticks and backslashes no label holds a character that a
  * shell expands, and without #, @ and : no label forms a comment that a tool
@@ -454,6 +454,21 @@ const labelOthers = /[^\p{L}\p{M}\p{N} .,()_\/+-]+/gu;
  * selectors and fillers, which labelOthers would keep as letters or marks.
  */
 const invisible = /\p{Default_Ignorable_Code_Point}+/gu;
+
+/**
+ * targetName reports whether the completion offers a file or a folder with
+ * this name for the target of a link: a name of letters, combining marks,
+ * digits and the characters . , _ + - only, without a run of two hyphens.
+ * Such a name holds no white space and no parentheses, which would end the
+ * target, no number sign, which would start the fragment, and nothing that
+ * ends or opens a comment, also with the slash after a folder (*\/), or that
+ * an XML comment does not allow (--).
+ * @param name - The name of the file or the folder.
+ * @returns Whether the completion offers the name.
+ */
+export function targetName(name: string): boolean {
+  return /^[\p{L}\p{M}\p{N}.,_+-]+$/u.test(name) && !name.includes('--') && !/\p{Default_Ignorable_Code_Point}/u.test(name);
+}
 
 /**
  * labelFrom returns the label that a link being written with an empty label

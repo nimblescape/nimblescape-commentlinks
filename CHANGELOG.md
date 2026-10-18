@@ -8,8 +8,8 @@ takes the section of a version as the notes of its GitHub release.
 - When the label of a link is empty or holds only spaces, as in `[](`, the
   file or the heading that you choose in the completion also becomes the
   label. A file gives its name, for example
-  `[requirements.md](docs/requirements.md)`, and a heading gives its text and
-  replaces the name of its file, for example
+  `[requirements.md](docs/requirements.md)`, and a heading then gives its text
+  in place of that name, for example
   `[R-ORDER-003](docs/requirements.md#r-order-003)`. The label keeps only the
   letters (also with accents), digits, spaces and the characters
   `. , ( ) _ / + -`. A label with other text stays as it is, and a name or a

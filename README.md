@@ -5,7 +5,7 @@ label of a link, and Ctrl+click opens the target at the heading that the
 link names. While you write a link, the extension completes its paths and
 headings.
 
-![A Go file in VS Code: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; black captions explain the steps](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+![A Go file in VS Code: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; captions in white text on a black box explain the steps](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
 
 ## What the extension does on your computer
 
@@ -51,9 +51,12 @@ describes each step and where its protection ends.
 - **Completion.** While you write a link, the extension completes the
   folders and files of its path and the headings of a Markdown target. When
   the label of the link is empty, as in `[](`, the chosen file or heading
-  also becomes the label: a file with its name, a heading with its text,
-  which replaces the name of its file. The label keeps only the letters (also
-  with accents), digits, spaces and the characters `. , ( ) _ / + -`.
+  also becomes the label: a file with its name, and then a heading with its
+  text in place of that name. The label keeps only the letters (also with
+  accents), digits, spaces and the characters `. , ( ) _ / + -`. The
+  completion lists only names of letters, digits and the characters
+  `. , _ + -`, so a file with a space or a bracket in its name is not
+  offered.
 - **Languages.** The extension reads the comments of Go, JavaScript,
   TypeScript, JSON, CSS, HTML, XML, YAML, shell scripts, Dockerfiles, SQL and
   more file types: see [Files](#files).
@@ -74,7 +77,7 @@ opens `unit.md` at the heading `A-UNIT-001`.
 | Follow a link | Ctrl+click on the label | Opens the target at the heading that its fragment names. |
 | Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
 | Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
-| Take the label from a file or a heading | Write `[](`, choose a file, and for a heading type `#` and choose it | A file writes its name into a label that is empty or holds only spaces, and a heading writes its text there or in place of the name of its file. A label with other text stays as it is. |
+| Take the label from a file or a heading | Write `[](`, choose a file, and for a heading type `#` and choose it | A file writes its name into a label that is empty or holds only spaces, or in place of the name of another file of the list. A heading writes its text there or in place of the name of its file. A label with other text stays as it is. |
 
 On macOS, follow a link with Cmd+click; the completion key is Ctrl+Space
 there too. When the setting `editor.multiCursorModifier` is `ctrlCmd`, VS Code
