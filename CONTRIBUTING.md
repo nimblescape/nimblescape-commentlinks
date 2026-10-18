@@ -78,7 +78,7 @@ the tools, the build gives the same file.
 - The activation events activate the extension when a document of a listed language opens. A test keeps them equal to the language table of `src/links.ts`.
 - The configuration contribution declares the setting that turns the hiding of targets off.
 - The untrusted-workspace and virtual-workspace capabilities state that the extension only reads.
-- The development dependencies are the build, test and packaging tools. The manifest declares no runtime dependency.
+- The development dependencies are the build, test and packaging tools. `allowScripts` lists the install scripts of dependencies that npm 11.19 and later may run: those of esbuild and `@vscode/vsce-sign` in every version, because the build and the packaging (`npm run package`) run the code of both packages anyway and Dependabot updates them, and not the one of fsevents, an optional package for macOS that already contains its built binary. The manifest declares no runtime dependency.
 
 The file table of the README follows the language table of `src/links.ts`,
 and the settings table of the README follows the configuration
