@@ -170,9 +170,9 @@ sign of a Markdown target it offers the anchors of the headings of that
 document, with the heading text as the detail. When the label of the link is
 empty or holds only white space, a chosen file also writes its name into the
 label, and a chosen heading its text (`labelFrom` in `src/links.ts`). A file
-also replaces a label that equals the name of another listed file, and a
-heading a label that equals the name of its file, as the completion of the
-file wrote it, or the text of another heading of that file. So a second choice
+also replaces a label that equals the name of another listed file. A heading
+also replaces a label that equals the name of its file or the text of another
+heading of that file, as the completion wrote them. So a second choice
 corrects the label of the first. The label keeps only letters, combining
 marks, digits, spaces and the characters `. , ( ) _ / + -`; every other
 character, also an invisible one (a default ignorable code point), becomes a

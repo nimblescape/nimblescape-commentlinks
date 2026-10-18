@@ -297,11 +297,12 @@ async function hiddenRanges(
  * permits and only with names that targetName accepts. A folder inserts its
  * name with a slash and opens the next completion. After the number sign of
  * a Markdown target it offers the anchors of the headings of that document.
- * A chosen file writes its name into a label that is empty or equals the
- * name of a listed file, and a chosen heading writes its text into a label
- * that is empty, equals the name of its file, as the completion of the file
- * writes it, or equals the text of a heading of that file. A cursor outside
- * a comment, outside a link or in a link to a web address gets nothing.
+ * A chosen file writes its name into a label that is empty, holds only white
+ * space or equals the name of a listed file. A chosen heading writes its text
+ * into a label that is empty, holds only white space or equals the name of
+ * its file or the text of a heading of that file, as the completion writes
+ * them. A cursor outside a comment, outside a link or in a link to a web
+ * address gets nothing.
  * @param document - The document.
  * @param position - The position of the cursor.
  * @returns The completions.
