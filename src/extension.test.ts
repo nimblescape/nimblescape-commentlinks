@@ -828,6 +828,38 @@ test('a chosen file fills an empty label with its name, and a chosen heading rep
   expect(other.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
 });
 
+test('a second chosen file corrects the name in the label, and the completion offers no name that could break the link', async () => {
+  const lines = [
+    'package app',
+    '// [notes.txt](docs/architecture/',
+    '// [ ](docs/architecture/',
+    '// [beside.md](beside.md#',
+    '// [](beside.md#',
+  ];
+  const f = await fixture(lines.join('\n'));
+  for (const name of ['+++', 'my file.md', 'a(b).md', 'x-->y.md']) await fs.writeFile(path.join(f.root, 'docs', 'architecture', name), '');
+  await fs.writeFile(path.join(f.root, 'internal', 'app', 'beside.md'), '# Beside\n');
+  const label = (line: number, end: number) => ({ start: { line, character: 4 }, end: { line, character: end } });
+  const second = (await f.complete(f.go, 1, lines[1].length))!;
+  expect(plain(second.map((item) => [item.label, item.additionalTextEdits ?? null]))).toStrictEqual([
+    ['+++', null],
+    ['notes.txt', [{ range: label(1, 13), newText: 'notes.txt' }]],
+    ['unit.md', [{ range: label(1, 13), newText: 'unit.md' }]],
+  ]);
+  const blank = (await f.complete(f.go, 2, lines[2].length))!;
+  expect(plain(blank.map((item) => item.additionalTextEdits ?? null))).toStrictEqual([
+    null,
+    [{ range: label(2, 5), newText: 'notes.txt' }],
+    [{ range: label(2, 5), newText: 'unit.md' }],
+  ]);
+  expect(plain((await f.complete(f.go, 3, lines[3].length))!.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(3, 13), newText: 'Beside' }],
+  ]);
+  expect(plain((await f.complete(f.go, 4, lines[4].length))!.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(4, 4), newText: 'Beside' }],
+  ]);
+});
+
 test('in a block comment a chosen heading fills a label that cannot end the comment, and a heading without text fills none', async () => {
   const lines = ['package app', '/* Assures: [](docs/other.md#'];
   const f = await fixture(lines.join('\n'));

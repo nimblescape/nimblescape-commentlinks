@@ -14,13 +14,14 @@ import {
   commentSpans,
   defaultEditor,
   globPattern,
-  labelFrom,
   headingLine,
   headings,
   headingSlug,
   headingText,
+  labelFrom,
   linkUnderCursor,
   syntaxes,
+  targetName,
 } from './links';
 
 /** spansOf returns the comment texts of source text in the given language. */
@@ -174,6 +175,7 @@ test('a link being written is found in a comment only and only for a local relat
 test('the label from a heading or a file name keeps letters, digits and simple punctuation and never ends a comment or a string', () => {
   expect(labelFrom('R-ORDER-003')).toBe('R-ORDER-003');
   expect(labelFrom('requirements.md')).toBe('requirements.md');
+  expect(labelFrom('a&b x-->y\nfmt.Println(1).md')).toBe('a b x- y fmt.Println(1).md');
   expect(labelFrom('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop 100 12');
   expect(labelFrom('  [Draft]   order  `total` **now** ')).toBe('Draft order total now');
   expect(labelFrom('[]')).toBe(undefined);
@@ -192,6 +194,16 @@ test('the label from a heading or a file name keeps letters, digits and simple p
   expect(labelFrom('Order\ufe0f\u034fx\u{e0100}')).toBe('Order x');
   expect(labelFrom('\u3164')).toBe(undefined);
   expect(labelFrom('\u0301 -')).toBe(undefined);
+});
+
+test('the completion offers only names that cannot break the target or the comment', () => {
+  expect(['requirements.md', 'R-ORDER_1.2,b+c.md', 'Maße', '.github'].filter(targetName)).toStrictEqual([
+    'requirements.md',
+    'R-ORDER_1.2,b+c.md',
+    'Maße',
+    '.github',
+  ]);
+  expect(['my file.md', 'a(b).md', 'a#b.md', 'x*', 'x-->y.md', 'a--b', "it's", '@types', 'a\nb', 'a\u200bb', ''].filter(targetName)).toStrictEqual([]);
 });
 
 test('the default editor of a resource follows the editor associations as the editor matches them', () => {

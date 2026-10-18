@@ -39,7 +39,7 @@
  */
 
 import * as vscode from 'vscode';
-import { type CommentLink, commentLinks, defaultEditor, headingLine, headings, labelFrom, linkUnderCursor, syntaxes } from './links';
+import { type CommentLink, commentLinks, defaultEditor, headingLine, headings, labelFrom, linkUnderCursor, syntaxes, targetName } from './links';
 
 /** openCommand names the command that opens the target of a link. */
 const openCommand = 'nimblescape.commentlinks.open';
@@ -293,14 +293,15 @@ async function hiddenRanges(
  * written in a comment. Before a number sign it offers the folders and files
  * of the directory that the target names, resolved against the directory of
  * the document first and against the workspace folder second, with the
- * entries beside the document first, and only in the folders that
- * allowedTarget permits. A folder inserts its name with a slash
- * and opens the next completion. After the number sign of a Markdown target
- * it offers the anchors of the headings of that document. A chosen file
- * fills an empty label with its name, and a chosen heading fills an empty
- * label, or the name of its file that the file wrote, with its text. A
- * cursor outside a comment, outside a link or in a link to a web address
- * gets nothing.
+ * entries beside the document first, only in the folders that allowedTarget
+ * permits and only with names that targetName accepts. A folder inserts its
+ * name with a slash and opens the next completion. After the number sign of
+ * a Markdown target it offers the anchors of the headings of that document.
+ * A chosen file writes its name into a label that is empty or equals the
+ * name of a listed file, and a chosen heading writes its text into a label
+ * that is empty or equals the name of its file, as the completion of the
+ * file writes it. A cursor outside a comment, outside a link or in a link to
+ * a web address gets nothing.
  * @param document - The document.
  * @param position - The position of the cursor.
  * @returns The completions.
@@ -321,7 +322,7 @@ async function completeTarget(
   if (link.fragment !== undefined) {
     if (!/\.md$/i.test(link.path)) return undefined;
     const range = new vscode.Range(document.positionAt(link.start + link.path.length + 1), position);
-    // A heading also replaces the name of its file, which the completion of the file wrote into an empty label.
+    // A heading also replaces a label that equals the name of its file, as the completion of the file writes it.
     const replaced = emptyLabel || link.label === labelFrom(link.path.slice(link.path.lastIndexOf('/') + 1)) ? labelRange : undefined;
     for (const base of bases) {
       const target = vscode.Uri.joinPath(base.uri, link.path);
@@ -346,33 +347,36 @@ async function completeTarget(
   const slash = link.path.lastIndexOf('/');
   const directory = slash === -1 ? '' : link.path.slice(0, slash + 1);
   const range = new vscode.Range(document.positionAt(link.start + directory.length), position);
-  const items = new Map<string, vscode.CompletionItem>();
+  const listed = new Map<string, { isFolder: boolean; detail: string }>();
   for (const base of bases) {
-    const listed = directory ? vscode.Uri.joinPath(base.uri, directory) : base.uri;
-    if (!allowedTarget(document.uri, folder?.uri, listed)) continue;
+    const uri = directory ? vscode.Uri.joinPath(base.uri, directory) : base.uri;
+    if (!allowedTarget(document.uri, folder?.uri, uri)) continue;
     let entries: [string, vscode.FileType][];
     try {
-      entries = await vscode.workspace.fs.readDirectory(listed);
+      entries = await vscode.workspace.fs.readDirectory(uri);
     } catch {
       continue;
     }
     for (const [name, type] of entries) {
-      if (items.has(name)) continue;
-      const isFolder = (type & vscode.FileType.Directory) !== 0;
-      const item = new vscode.CompletionItem(
-        isFolder ? `${name}/` : name,
-        isFolder ? vscode.CompletionItemKind.Folder : vscode.CompletionItemKind.File,
-      );
-      item.detail = base.detail;
-      item.range = range;
-      item.sortText = `${isFolder ? '0' : '1'}${name}`;
-      if (isFolder) item.command = { command: 'editor.action.triggerSuggest', title: 'Suggest' };
-      const filled = !isFolder && emptyLabel && labelFrom(name);
-      if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(labelRange, filled)];
-      items.set(name, item);
+      if (!listed.has(name) && targetName(name)) listed.set(name, { isFolder: (type & vscode.FileType.Directory) !== 0, detail: base.detail });
     }
   }
-  return [...items.values()];
+  // A file also replaces the name of another listed file, so that a second choice corrects the label of the first.
+  const files = [...listed].filter(([, entry]) => !entry.isFolder).map(([name]) => name);
+  const replaced = emptyLabel || files.some((name) => link.label === labelFrom(name)) ? labelRange : undefined;
+  return [...listed].map(([name, { isFolder, detail }]) => {
+    const item = new vscode.CompletionItem(
+      isFolder ? `${name}/` : name,
+      isFolder ? vscode.CompletionItemKind.Folder : vscode.CompletionItemKind.File,
+    );
+    item.detail = detail;
+    item.range = range;
+    item.sortText = `${isFolder ? '0' : '1'}${name}`;
+    if (isFolder) item.command = { command: 'editor.action.triggerSuggest', title: 'Suggest' };
+    const filled = !isFolder && replaced && labelFrom(name);
+    if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(replaced, filled)];
+    return item;
+  });
 }
 
 /**
