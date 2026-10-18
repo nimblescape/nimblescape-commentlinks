@@ -90,8 +90,8 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   its name into the label only when the label is empty, holds only white
   space or equals the name of another listed file. A chosen heading writes its
   text into the label only when the label is empty, holds only white space or
-  equals the name of its file or the text of another heading of that file.
-  The completion lists only names of letters, combining marks, digits and the
+  equals the name of its file or the text of another heading of that file,
+  as the completion wrote them. The completion lists only names of letters, combining marks, digits and the
   characters `. , _ + -`, without `--`, without a hyphen at the end and
   without invisible characters, so a chosen name cannot end the target or the
   comment and cannot start a new line. The label keeps only letters, combining

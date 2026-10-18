@@ -77,7 +77,7 @@ opens `unit.md` at the heading `A-UNIT-001`.
 | Follow a link | Ctrl+click on the label | Opens the target at the heading that its fragment names. |
 | Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
 | Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
-| Take the label from a file or a heading | Write `[](`, choose a file, and for a heading type `#` and choose it | A file writes its name into a label that is empty or holds only spaces, or in place of the name of another file of the list. A heading writes its text into a label that is empty or holds only spaces, or in place of the name of its file or of the text of another heading of the file. A label with other text stays as it is. |
+| Take the label from a file or a heading | Write `[](`, choose a file, and for a heading type `#` and choose it | A file writes its name into a label that is empty or holds only spaces, or in place of the name of another file of the list. A heading writes its text into a label that is empty or holds only spaces, or in place of the name of its file or the text of another heading of the file, as the completion wrote them. A label with other text stays as it is. |
 
 On macOS, follow a link with Cmd+click; the completion key is Ctrl+Space
 there too. When the setting `editor.multiCursorModifier` is `ctrlCmd`, VS Code
