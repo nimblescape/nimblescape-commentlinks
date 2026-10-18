@@ -828,13 +828,15 @@ test('a chosen file fills an empty label with its name, and a chosen heading rep
   expect(other.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
 });
 
-test('a second chosen file corrects the name in the label, and the completion offers no name that could break the link', async () => {
+test('a second chosen file or heading corrects the label, and the completion offers no name that could break the link', async () => {
   const lines = [
     'package app',
     '// [notes.txt](docs/architecture/',
     '// [ ](docs/architecture/',
     '// [beside.md](beside.md#',
     '// [](beside.md#',
+    '// [Unit](docs/architecture/unit.md#',
+    '// [docs](',
   ];
   const f = await fixture(lines.join('\n'));
   for (const name of ['+++', 'my file.md', 'a(b).md', 'x-->y.md']) await fs.writeFile(path.join(f.root, 'docs', 'architecture', name), '');
@@ -858,6 +860,14 @@ test('a second chosen file corrects the name in the label, and the completion of
   expect(plain((await f.complete(f.go, 4, lines[4].length))!.map((item) => item.additionalTextEdits))).toStrictEqual([
     [{ range: label(4, 4), newText: 'Beside' }],
   ]);
+  expect(plain((await f.complete(f.go, 5, lines[5].length))!.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(5, 8), newText: 'Unit' }],
+    [{ range: label(5, 8), newText: 'A-UNIT-001' }],
+  ]);
+  // The name of a folder is no name that a file wrote, so the label stays.
+  const folderName = (await f.complete(f.go, 6, lines[6].length))!;
+  expect(folderName.map((item) => item.label)).toContain('docs/');
+  expect(folderName.map((item) => item.additionalTextEdits)).toStrictEqual(folderName.map(() => undefined));
 });
 
 test('in a block comment a chosen heading fills a label that cannot end the comment, and a heading without text fills none', async () => {

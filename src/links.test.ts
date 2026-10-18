@@ -203,7 +203,7 @@ test('the completion offers only names that cannot break the target or the comme
     'Maße',
     '.github',
   ]);
-  expect(['my file.md', 'a(b).md', 'a#b.md', 'x*', 'x-->y.md', 'a--b', "it's", '@types', 'a\nb', 'a\u200bb', ''].filter(targetName)).toStrictEqual([]);
+  expect(['my file.md', 'a(b).md', 'a#b.md', 'x*', 'x-->y.md', 'a--b', "it's", '@types', 'a\nb', 'a\u200bb', 'a\u202eb', 'x-', ''].filter(targetName)).toStrictEqual([]);
 });
 
 test('the default editor of a resource follows the editor associations as the editor matches them', () => {

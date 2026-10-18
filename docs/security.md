@@ -86,12 +86,13 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   another extension, or a `command:` link of another source, cannot open any
   other file through it.
 - **The completion.** While you write a link, the completion lists folders
-  and reads Markdown files only inside the same folders. A chosen file or
-  heading fills only a label that is empty or holds only white space, with the
-  name of the file or the text of the heading. A file also replaces a label
-  that equals the name of another listed file, and a heading a label that
-  equals the name of its file. The completion lists only names of letters,
-  combining marks, digits and the characters `. , _ + -`, without `--` and
+  and reads Markdown files only inside the same folders. A chosen file writes
+  its name into the label only when the label is empty, holds only white
+  space or equals the name of another listed file. A chosen heading writes its
+  text into the label only when the label is empty, holds only white space or
+  equals the name of its file or the text of another heading of that file.
+  The completion lists only names of letters, combining marks, digits and the
+  characters `. , _ + -`, without `--`, without a hyphen at the end and
   without invisible characters, so a chosen name cannot end the target or the
   comment and cannot start a new line. The label keeps only letters, combining
   marks, digits, spaces and the characters `. , ( ) _ / + -` of that name or

@@ -299,9 +299,9 @@ async function hiddenRanges(
  * a Markdown target it offers the anchors of the headings of that document.
  * A chosen file writes its name into a label that is empty or equals the
  * name of a listed file, and a chosen heading writes its text into a label
- * that is empty or equals the name of its file, as the completion of the
- * file writes it. A cursor outside a comment, outside a link or in a link to
- * a web address gets nothing.
+ * that is empty, equals the name of its file, as the completion of the file
+ * writes it, or equals the text of a heading of that file. A cursor outside
+ * a comment, outside a link or in a link to a web address gets nothing.
  * @param document - The document.
  * @param position - The position of the cursor.
  * @returns The completions.
@@ -322,8 +322,7 @@ async function completeTarget(
   if (link.fragment !== undefined) {
     if (!/\.md$/i.test(link.path)) return undefined;
     const range = new vscode.Range(document.positionAt(link.start + link.path.length + 1), position);
-    // A heading also replaces a label that equals the name of its file, as the completion of the file writes it.
-    const replaced = emptyLabel || link.label === labelFrom(link.path.slice(link.path.lastIndexOf('/') + 1)) ? labelRange : undefined;
+    const fileLabel = labelFrom(link.path.slice(link.path.lastIndexOf('/') + 1));
     for (const base of bases) {
       const target = vscode.Uri.joinPath(base.uri, link.path);
       if (!allowedTarget(document.uri, folder?.uri, target)) continue;
@@ -333,7 +332,12 @@ async function completeTarget(
       } catch {
         continue;
       }
-      return headings(markdown).map((heading) => {
+      const found = headings(markdown);
+      // A heading also replaces the name of its file, as the completion of the file writes it, and the text of
+      // another heading of the file, so that a second choice corrects the label of the first.
+      const written = emptyLabel || link.label === fileLabel || found.some((heading) => link.label === labelFrom(heading.text));
+      const replaced = written ? labelRange : undefined;
+      return found.map((heading) => {
         const item = new vscode.CompletionItem(heading.slug, vscode.CompletionItemKind.Reference);
         item.detail = heading.text;
         item.range = range;
