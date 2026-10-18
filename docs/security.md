@@ -87,10 +87,18 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   other file through it.
 - **The completion.** While you write a link, the completion lists folders
   and reads Markdown files only inside the same folders. A chosen heading
-  fills only an empty label of the link, with the text of the heading
-  without brackets. A heading whose text holds the end of a block comment of
-  the language, such as `*/` or `-->`, fills no label, so that the text of a
-  Markdown file cannot end the comment and add code to the file.
+  fills only a label that is empty or holds only white space. The label
+  keeps only letters, combining marks, digits, spaces and the characters
+  `. , : ; ! ? ( ) ' _ / + & # % = @ -` of the heading text; every other
+  character becomes a space, and a run of hyphens becomes one hyphen. So the
+  text of a Markdown file cannot end the comment (`*/`, `-->`, `--!>`), open
+  a nested comment (`/*` in SQL), put `--` into an XML comment, start a new
+  line or add a format character, such as a control of the text direction.
+  When the label still holds a comment marker of the language, or no text
+  remains, the heading fills no label. The extension finds comments with a
+  simple scanner, so a line of a shell here-document that starts with `#`
+  also counts as a comment; the kept characters have no special meaning
+  there either, because `$`, backticks and backslashes do not remain.
 - **The editor.** The command opens the target with the editor that the
   window associates with its file type (the setting
   `workbench.editorAssociations`). For a fragment, the command reads the text

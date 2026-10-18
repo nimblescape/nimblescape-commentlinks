@@ -5,10 +5,11 @@ takes the section of a version as the notes of its GitHub release.
 
 ## 0.2.0
 
-- A link can start with an empty label. Write `[](`, complete the path, type
-  `#` and choose a heading: the text of the heading becomes the label, for
-  example `[R-ORDER-003](docs/requirements.md#r-order-003)`. A label that you
-  wrote stays as it is.
+- When the label of a link is empty, as in `[](`, the heading that you choose
+  in the completion also becomes the label, for example
+  `[R-ORDER-003](docs/requirements.md#r-order-003)`. The label keeps the
+  letters, digits, spaces and simple punctuation of the heading. A label with
+  text stays as it is.
 
 ## 0.1.0
 

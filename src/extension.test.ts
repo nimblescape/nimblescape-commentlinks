@@ -794,6 +794,17 @@ test('a chosen heading fills the empty label of a link being written and keeps a
   expect(written.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
 });
 
+test('in a block comment a chosen heading fills a label that cannot end the comment, and a heading without text fills none', async () => {
+  const lines = ['package app', '/* Assures: [](docs/other.md#'];
+  const f = await fixture(lines.join('\n'));
+  await fs.writeFile(path.join(f.root, 'docs', 'other.md'), '# Ends */ here\n\n# <$>\n');
+  const items = (await f.complete(f.go, 1, lines[1].length))!;
+  expect(plain(items.map((item) => [item.detail, item.additionalTextEdits]))).toStrictEqual([
+    ['Ends */ here', [{ range: { start: { line: 1, character: 13 }, end: { line: 1, character: 13 } }, newText: 'Ends / here' }]],
+    ['<$>', null],
+  ]);
+});
+
 test('the completion lists no folder and reads no heading outside the folders that a link may name', async () => {
   const lines = ['package app', '// out [x](../../../', '// heading [x](../../../secret.md#s', '// up [x](../../'];
   const f = await fixture(lines.join('\n'), '', ['package x', '// [x](../', '// [x](docs/'].join('\n'));

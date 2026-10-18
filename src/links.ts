@@ -436,18 +436,31 @@ export function headings(markdown: string): Heading[] {
 }
 
 /**
+ * labelOthers matches a run of characters that a label from a heading does
+ * not keep: all but letters, combining marks, digits, the space and the
+ * characters . , : ; ! ? ( ) ' _ / + & # % = @ -. Without * and > no label
+ * ends a block comment or opens one, without brackets no label ends the
+ * label, and without $, backticks and backslashes no label holds a character
+ * that a shell expands. Line breaks, other white space and format
+ * characters, such as the controls of the text direction, do not remain
+ * either.
+ */
+const labelOthers = /[^\p{L}\p{M}\p{N} .,:;!?()'_\/+&#%=@-]+/gu;
+
+/**
  * headingLabel returns the label that a link being written with an empty
  * label takes from the heading that its completion chooses: the text of the
- * heading without brackets, which would end the label, and with single
- * spaces. It returns undefined when no text remains, or when the text holds
- * the end of a block comment of the syntax, which would end the comment.
+ * heading with a space for each run of characters that labelOthers matches,
+ * one hyphen for each run of hyphens, which an XML comment does not allow,
+ * and single spaces. It returns undefined when no text remains, or when the
+ * text still holds a block comment marker of the syntax.
  * @param text - The text of the heading.
  * @param syntax - The comment syntax of the language.
  * @returns The label, or undefined.
  */
 export function headingLabel(text: string, syntax: CommentSyntax): string | undefined {
-  const label = text.replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
-  if (label === '' || syntax.block.some(([, close]) => label.includes(close))) return undefined;
+  const label = text.replace(labelOthers, ' ').replace(/-{2,}/g, '-').replace(/ {2,}/g, ' ').trim();
+  if (label === '' || syntax.block.some((markers) => markers.some((marker) => label.includes(marker)))) return undefined;
   return label;
 }
 
