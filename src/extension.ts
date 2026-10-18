@@ -335,7 +335,7 @@ async function completeTarget(
         const item = new vscode.CompletionItem(heading.slug, vscode.CompletionItemKind.Reference);
         item.detail = heading.text;
         item.range = range;
-        const filled = labelRange && headingLabel(heading.text, syntax);
+        const filled = labelRange && headingLabel(heading.text);
         if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(labelRange, filled)];
         return item;
       });

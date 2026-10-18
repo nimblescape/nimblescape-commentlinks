@@ -51,8 +51,8 @@ describes each step and where its protection ends.
 - **Completion.** While you write a link, the extension completes the
   folders and files of its path and the headings of a Markdown target. When
   the label of the link is empty, as in `[](`, the chosen heading also
-  becomes the label. The label keeps the letters, digits, spaces and simple
-  punctuation of the heading.
+  becomes the label. The label keeps only the letters, digits, spaces and
+  the characters `. , : ( ) _ / + -` of the heading.
 - **Languages.** The extension reads the comments of Go, JavaScript,
   TypeScript, JSON, CSS, HTML, XML, YAML, shell scripts, Dockerfiles, SQL and
   more file types: see [Files](#files).
@@ -73,7 +73,7 @@ opens `unit.md` at the heading `A-UNIT-001`.
 | Follow a link | Ctrl+click on the label | Opens the target at the heading that its fragment names. |
 | Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
 | Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
-| Take the label from a heading | Write `[](`, complete the path, type `#` and choose a heading | Writes the text of the heading into the empty label. A label with text stays as it is. |
+| Take the label from a heading | Write `[](`, complete the path, type `#` and choose a heading | Writes the heading into a label that is empty or holds only spaces. A label with text stays as it is, and a heading without letters or digits writes nothing. |
 
 On macOS, follow a link with Cmd+click; the completion key is Ctrl+Space
 there too. When the setting `editor.multiCursorModifier` is `ctrlCmd`, VS Code
