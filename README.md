@@ -137,6 +137,9 @@ space. Markdown files keep the link handling of VS Code.
   to show
   ([microsoft/vscode#289785](https://github.com/microsoft/vscode/issues/289785)).
   Another editor of Markdown files decides whether it shows the heading.
+- On GitHub, a link in a code comment is plain text: GitHub makes no link in
+  a code file, not even of a web address. A comment link works only in VS
+  Code with the extension.
 - The label of a link is text in the file, and it can name a file other than
   the target. Before you follow a link in a file that you do not trust, read
   its tooltip, or put the cursor on its line to show the whole link.
