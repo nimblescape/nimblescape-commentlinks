@@ -173,7 +173,7 @@ test('a link being written is found in a comment only and only for a local relat
 
 test('the label from a heading keeps letters, digits and simple punctuation and never ends a comment or a string', () => {
   expect(headingLabel('R-ORDER-003')).toBe('R-ORDER-003');
-  expect(headingLabel('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop: 100 12');
+  expect(headingLabel('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop 100 12');
   expect(headingLabel('  [Draft]   order  `total` **now** ')).toBe('Draft order total now');
   expect(headingLabel('[]')).toBe(undefined);
   expect(headingLabel('\t')).toBe(undefined);
@@ -181,10 +181,12 @@ test('the label from a heading keeps letters, digits and simple punctuation and 
   expect(headingLabel('Ends --> <script>x</script>')).toBe('Ends - script x /script');
   expect(headingLabel('Ends --!> here')).toBe('Ends - here');
   expect(headingLabel('CLI --help')).toBe('CLI -help');
-  expect(headingLabel('Limits\u0085debug: true\u2028x\fy')).toBe('Limits debug: true x y');
+  expect(headingLabel('a-\u200b-b')).toBe('a- -b');
+  expect(headingLabel('Limits\u0085debug: true\u2028x\fy')).toBe('Limits debug true x y');
   expect(headingLabel('Admin\u202e\u2066 rights\u200b')).toBe('Admin rights');
   expect(headingLabel('Run $(cmd), `cmd` and a\\b')).toBe('Run (cmd), cmd and a b');
-  expect(headingLabel("Notes'; touch x; : '\"")).toBe('Notes touch x :');
+  expect(headingLabel("Notes'; touch x; : '\"")).toBe('Notes touch x');
+  expect(headingLabel('Orders vim: set binary noeol :')).toBe('Orders vim set binary noeol');
   expect(headingLabel('Runtime @jsxImportSource x, audit #__PURE__')).toBe('Runtime jsxImportSource x, audit __PURE__');
   expect(headingLabel('Order\ufe0f\u034fx\u{e0100}')).toBe('Order x');
   expect(headingLabel('\u3164')).toBe(undefined);

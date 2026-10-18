@@ -5,12 +5,12 @@ takes the section of a version as the notes of its GitHub release.
 
 ## 0.2.0
 
-- When the label of a link is empty, as in `[](`, the heading that you choose
-  in the completion also becomes the label, for example
-  `[R-ORDER-003](docs/requirements.md#r-order-003)`. The label keeps only the
-  letters, digits, spaces and the characters `. , : ( ) _ / + -` of the
-  heading. A label with text stays as it is, and a heading without letters or
-  digits fills no label.
+- When the label of a link is empty or holds only spaces, as in `[](`, the
+  heading that you choose in the completion also becomes the label, for
+  example `[R-ORDER-003](docs/requirements.md#r-order-003)`. The label keeps
+  only the letters (also with accents), digits, spaces and the characters
+  `. , ( ) _ / + -` of the heading. A label with text stays as it is, and a
+  heading without letters or digits fills no label.
 
 ## 0.1.0
 

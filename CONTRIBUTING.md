@@ -166,15 +166,16 @@ a Markdown target it offers the anchors of the headings of that document,
 with the heading text as the detail. When the label of the link is empty or
 holds only white space, a heading also replaces the label with its text
 (`headingLabel` in `src/links.ts`). The label keeps only letters, combining
-marks, digits, spaces and the characters `. , : ( ) _ / + -`; every other
+marks, digits, spaces and the characters `. , ( ) _ / + -`; every other
 character, also an invisible one (a default ignorable code point), becomes a
 space, a run of hyphens becomes one hyphen and a run of spaces one space. So
 no label ends or opens a comment, holds `--` in an XML comment, breaks the
 line, ends a quoted string, holds `$`, a backtick or a backslash, or forms a
-comment that a tool reads, such as `#__PURE__` or `@ts-ignore`. A heading
-without letters or digits fills no label. The completion opens on `(`, `/`
-and `#`, and on the completion key of the editor. A link to a web address,
-an absolute path or a bare fragment gets no completion.
+comment that a tool reads, such as `#__PURE__`, `@ts-ignore` or a modeline
+of Vim (`vim: set …`). A heading without letters or digits fills no label.
+The completion opens on `(`, `/` and `#`, and on the completion key of the
+editor. A link to a web address, an absolute path or a bare fragment gets no
+completion.
 
 ### Scope and limits
 

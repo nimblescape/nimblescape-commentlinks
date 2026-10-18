@@ -438,16 +438,17 @@ export function headings(markdown: string): Heading[] {
 /**
  * labelOthers matches a run of characters that a label from a heading does
  * not keep: all but letters, combining marks, digits, the space and the
- * characters . , : ( ) _ / + -. Without * and > no label ends a block
+ * characters . , ( ) _ / + -. Without * and > no label ends a block
  * comment or opens one, without brackets no label ends the label, without
  * quotes no label ends a string that the scanner takes for a comment,
  * without $, backticks and backslashes no label holds a character that a
- * shell expands, and without # and @ no label forms a comment that a tool
- * reads, such as #__PURE__ or @ts-ignore. Line breaks, other white space and
+ * shell expands, and without #, @ and : no label forms a comment that a tool
+ * reads, such as #__PURE__, @ts-ignore or a modeline of Vim (vim: set …).
+ * Line breaks, other white space and
  * format characters, such as the controls of the text direction, do not
  * remain either.
  */
-const labelOthers = /[^\p{L}\p{M}\p{N} .,:()_\/+-]+/gu;
+const labelOthers = /[^\p{L}\p{M}\p{N} .,()_\/+-]+/gu;
 
 /**
  * invisible matches a run of characters that show nothing, such as variation
