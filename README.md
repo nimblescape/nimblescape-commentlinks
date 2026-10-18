@@ -51,8 +51,8 @@ describes each step and where its protection ends.
 - **Completion.** While you write a link, the extension completes the
   folders and files of its path and the headings of a Markdown target. When
   the label of the link is empty, as in `[](`, the chosen heading also
-  becomes the label. The label keeps only the letters, digits, spaces and
-  the characters `. , : ( ) _ / + -` of the heading.
+  becomes the label. The label keeps only the letters (also with accents),
+  digits, spaces and the characters `. , ( ) _ / + -` of the heading.
 - **Languages.** The extension reads the comments of Go, JavaScript,
   TypeScript, JSON, CSS, HTML, XML, YAML, shell scripts, Dockerfiles, SQL and
   more file types: see [Files](#files).
