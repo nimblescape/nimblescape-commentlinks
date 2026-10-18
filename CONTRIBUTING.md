@@ -15,6 +15,7 @@ and [security.md](docs/security.md) describes the security model.
 | `dist/` | The bundle `dist/extension.js`, built by `esbuild.mjs` and kept out of Git. |
 | `resources/icon.png`, `resources/icon.svg` | The Marketplace icon (256 × 256 PNG, because the Marketplace takes no SVG icon) and its source: a comment bubble with a link on the tile of the nimblescape extensions. |
 | `docs/security.md` | The security model: what the extension reads, which files a link opens, and where its protection ends. The README links it. |
+| `docs/images/` | The images of the README: `comment-links.gif`, a screen recording of VS Code that shows the hidden targets, the completion and a Ctrl+click on a link. GIF and PNG files only, because the Marketplace shows no SVG image. The README links them with full addresses on the branch `main`, which the Marketplace requires; they are not part of the package. A test checks that each image of the README is a GIF or PNG file in this folder. |
 | `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. The bundle is readable JavaScript: not minified. A production build (`--production`) has no source map. |
 | `tsconfig.json` | The TypeScript settings of the type check: strict, and no output, because esbuild builds the bundle. |
 | `vitest.config.mts` | The settings of the tests: the files `src/**/*.test.ts` and `scripts/**/*.test.mjs` on Node. |
@@ -47,7 +48,7 @@ release in `.node-version` for the tools and CI, and the runtime of VS Code
 | `npm run typecheck` | Checks the types with `tsc`. esbuild does not check them. |
 | `npm test` | Runs the tests with vitest. The tests touch no installed editor. |
 | `npm run build` | Bundles `dist/extension.js` with a source map. |
-| `npm run package` | Builds `nimblescape-commentlinks-<version>.vsix` with vsce, which first runs the production build (`vscode:prepublish`). vsce also validates the manifest and the README. |
+| `npm run package` | Builds `nimblescape-commentlinks-<version>.vsix` with vsce, which first runs the production build (`vscode:prepublish`). vsce also validates the manifest. |
 | `npm run install-local` | Builds the package and installs it into every profile of the VS Code of this computer; `-- --profile <name>` installs into one profile. Reload the window after an update of an active extension. |
 | `npm run uninstall-local` | Removes `nimblescape.nimblescape-commentlinks` from every profile of the VS Code of this computer; `-- --profile <name>` removes it from one profile. |
 
@@ -88,7 +89,13 @@ contribution. A test checks that the README names every setting.
 "Changelog". `SUPPORT.md` says how to ask a question and how to report a
 problem; it is in the package too. vsce does not rewrite relative links
 (`--no-rewrite-relative-links`), so the three use full `https://github.com/…`
-links outside code. A test checks it.
+links outside code. A test checks it. The README shows the images of
+`docs/images/` with full addresses on the branch `main`
+(`https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/…`),
+because vsce leaves a relative image address unchanged too. With
+`--no-rewrite-relative-links`, vsce also skips its checks of the images (an
+`https` address and no SVG image), so a test checks the images of the
+README.
 
 ## How the extension works
 
