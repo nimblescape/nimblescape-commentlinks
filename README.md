@@ -5,7 +5,7 @@ label of a link, and Ctrl+click opens the target at the heading that the
 link names. While you write a link, the extension completes its paths and
 headings.
 
-![A Go file in VS Code, in four steps: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; a blue band above the window names each step, and a label at the bottom names each pressed key and its command](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+![A Go file in VS Code, in four steps: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; a blue band above the window names each scene, and a label at the bottom names each pressed key and its command](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
 
 ## What the extension does on your computer
 
