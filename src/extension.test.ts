@@ -794,6 +794,40 @@ test('a chosen heading fills the empty label of a link being written and keeps a
   expect(written.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
 });
 
+test('a chosen file fills an empty label with its name, and a chosen heading replaces that name', async () => {
+  const lines = [
+    'package app',
+    '// [](',
+    '// [](docs/architecture/',
+    '// [x](docs/architecture/',
+    '// [unit.md](docs/architecture/unit.md#a',
+    '// [notes.txt](docs/architecture/unit.md#a',
+  ];
+  const f = await fixture(lines.join('\n'));
+  const label = (line: number, end: number) => ({ start: { line, character: 4 }, end: { line, character: end } });
+  const start = (await f.complete(f.go, 1, lines[1].length))!;
+  expect(plain(start.map((item) => [item.label, item.additionalTextEdits ?? null]))).toStrictEqual([
+    ['docs/', null],
+    ['x_test.go', [{ range: label(1, 4), newText: 'x_test.go' }]],
+    ['config.yaml', [{ range: label(1, 4), newText: 'config.yaml' }]],
+    ['internal/', null],
+  ]);
+  const files = (await f.complete(f.go, 2, lines[2].length))!;
+  expect(plain(files.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(2, 4), newText: 'notes.txt' }],
+    [{ range: label(2, 4), newText: 'unit.md' }],
+  ]);
+  const written = (await f.complete(f.go, 3, lines[3].length))!;
+  expect(written.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
+  const named = (await f.complete(f.go, 4, lines[4].length))!;
+  expect(plain(named.map((item) => item.additionalTextEdits))).toStrictEqual([
+    [{ range: label(4, 11), newText: 'Unit' }],
+    [{ range: label(4, 11), newText: 'A-UNIT-001' }],
+  ]);
+  const other = (await f.complete(f.go, 5, lines[5].length))!;
+  expect(other.map((item) => item.additionalTextEdits)).toStrictEqual([undefined, undefined]);
+});
+
 test('in a block comment a chosen heading fills a label that cannot end the comment, and a heading without text fills none', async () => {
   const lines = ['package app', '/* Assures: [](docs/other.md#'];
   const f = await fixture(lines.join('\n'));

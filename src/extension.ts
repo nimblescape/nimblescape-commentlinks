@@ -39,7 +39,7 @@
  */
 
 import * as vscode from 'vscode';
-import { type CommentLink, commentLinks, defaultEditor, headingLabel, headingLine, headings, linkUnderCursor, syntaxes } from './links';
+import { type CommentLink, commentLinks, defaultEditor, headingLine, headings, labelFrom, linkUnderCursor, syntaxes } from './links';
 
 /** openCommand names the command that opens the target of a link. */
 const openCommand = 'nimblescape.commentlinks.open';
@@ -296,10 +296,11 @@ async function hiddenRanges(
  * entries beside the document first, and only in the folders that
  * allowedTarget permits. A folder inserts its name with a slash
  * and opens the next completion. After the number sign of a Markdown target
- * it offers the anchors of the headings of that document, and a link with an
- * empty label takes the text of the chosen heading as its label. A cursor
- * outside a comment, outside a link or in a link to a web address gets
- * nothing.
+ * it offers the anchors of the headings of that document. A chosen file
+ * fills an empty label with its name, and a chosen heading fills an empty
+ * label, or the name of its file that the file wrote, with its text. A
+ * cursor outside a comment, outside a link or in a link to a web address
+ * gets nothing.
  * @param document - The document.
  * @param position - The position of the cursor.
  * @returns The completions.
@@ -315,13 +316,13 @@ async function completeTarget(
   const folder = vscode.workspace.getWorkspaceFolder(document.uri);
   const bases = [{ uri: vscode.Uri.joinPath(document.uri, '..'), detail: 'beside the file' }];
   if (folder) bases.push({ uri: folder.uri, detail: 'in the workspace folder' });
+  const labelRange = new vscode.Range(document.positionAt(link.labelStart), document.positionAt(link.labelStart + link.label.length));
+  const emptyLabel = link.label.trim() === '';
   if (link.fragment !== undefined) {
     if (!/\.md$/i.test(link.path)) return undefined;
     const range = new vscode.Range(document.positionAt(link.start + link.path.length + 1), position);
-    const labelRange =
-      link.label.trim() === ''
-        ? new vscode.Range(document.positionAt(link.labelStart), document.positionAt(link.labelStart + link.label.length))
-        : undefined;
+    // A heading also replaces the name of its file, which the completion of the file wrote into an empty label.
+    const replaced = emptyLabel || link.label === labelFrom(link.path.slice(link.path.lastIndexOf('/') + 1)) ? labelRange : undefined;
     for (const base of bases) {
       const target = vscode.Uri.joinPath(base.uri, link.path);
       if (!allowedTarget(document.uri, folder?.uri, target)) continue;
@@ -335,8 +336,8 @@ async function completeTarget(
         const item = new vscode.CompletionItem(heading.slug, vscode.CompletionItemKind.Reference);
         item.detail = heading.text;
         item.range = range;
-        const filled = labelRange && headingLabel(heading.text);
-        if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(labelRange, filled)];
+        const filled = replaced && labelFrom(heading.text);
+        if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(replaced, filled)];
         return item;
       });
     }
@@ -366,6 +367,8 @@ async function completeTarget(
       item.range = range;
       item.sortText = `${isFolder ? '0' : '1'}${name}`;
       if (isFolder) item.command = { command: 'editor.action.triggerSuggest', title: 'Suggest' };
+      const filled = !isFolder && emptyLabel && labelFrom(name);
+      if (filled) item.additionalTextEdits = [vscode.TextEdit.replace(labelRange, filled)];
       items.set(name, item);
     }
   }

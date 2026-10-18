@@ -436,8 +436,8 @@ export function headings(markdown: string): Heading[] {
 }
 
 /**
- * labelOthers matches a run of characters that a label from a heading does
- * not keep: all but letters, combining marks, digits, the space and the
+ * labelOthers matches a run of characters that a label from a heading or a
+ * file name does not keep: all but letters, combining marks, digits, the space and the
  * characters . , ( ) _ / + -. Without * and > no label ends a block
  * comment or opens one, without brackets no label ends the label, without
  * quotes no label ends a string that the scanner takes for a comment,
@@ -456,16 +456,16 @@ const labelOthers = /[^\p{L}\p{M}\p{N} .,()_\/+-]+/gu;
 const invisible = /\p{Default_Ignorable_Code_Point}+/gu;
 
 /**
- * headingLabel returns the label that a link being written with an empty
- * label takes from the heading that its completion chooses: the text of the
- * heading with a space for each run of characters that invisible or
- * labelOthers matches, one hyphen for each run of hyphens, which an XML
- * comment does not allow, and single spaces. It returns undefined when the
- * label holds no letter and no digit.
- * @param text - The text of the heading.
+ * labelFrom returns the label that a link being written with an empty label
+ * takes from the heading or the file that its completion chooses: the text
+ * of the heading or the name of the file with a space for each run of
+ * characters that invisible or labelOthers matches, one hyphen for each run
+ * of hyphens, which an XML comment does not allow, and single spaces. It
+ * returns undefined when the label holds no letter and no digit.
+ * @param text - The text of the heading or the name of the file.
  * @returns The label, or undefined.
  */
-export function headingLabel(text: string): string | undefined {
+export function labelFrom(text: string): string | undefined {
   const label = text.replace(invisible, ' ').replace(labelOthers, ' ').replace(/-{2,}/g, '-').replace(/ {2,}/g, ' ').trim();
   return /[\p{L}\p{N}]/u.test(label) ? label : undefined;
 }
