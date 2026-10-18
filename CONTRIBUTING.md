@@ -15,7 +15,7 @@ and [security.md](docs/security.md) describes the security model.
 | `dist/` | The bundle `dist/extension.js`, built by `esbuild.mjs` and kept out of Git. |
 | `resources/icon.png`, `resources/icon.svg` | The Marketplace icon (256 × 256 PNG, because the Marketplace takes no SVG icon) and its source: a comment bubble with a link on the tile of the nimblescape extensions. |
 | `docs/security.md` | The security model: what the extension reads, which files a link opens, and where its protection ends. The README links it. |
-| `docs/images/` | The images of the README: `comment-links.gif`, a screen recording of VS Code that shows the hidden targets, the completion and a Ctrl+click on a link. GIF and PNG files only, because the Marketplace shows no SVG image. The README shows them with full `https` addresses, because the Marketplace shows no image with a relative address; the addresses name the branch `main`. They are not part of the package. A test checks that each image of the README is a GIF or PNG file in this folder. |
+| `docs/images/` | The images of the README: `comment-links.gif`, a screen recording of VS Code that shows the hidden targets, the completion of a link with an empty label and a Ctrl+click on a link. GIF and PNG files only, because the Marketplace shows no SVG image. The README shows them with full `https` addresses, because the Marketplace shows no image with a relative address; the addresses name the branch `main`. They are not part of the package. A test checks that each image of the README is a GIF or PNG file in this folder. |
 | `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. The bundle is readable JavaScript: not minified. A production build (`--production`) has no source map. |
 | `tsconfig.json` | The TypeScript settings of the type check: strict, and no output, because esbuild builds the bundle. |
 | `vitest.config.mts` | The settings of the tests: the files `src/**/*.test.ts` and `scripts/**/*.test.mjs` on Node. |
@@ -163,9 +163,13 @@ the directory that the target names, resolved like a link: the entries beside
 the file first, then the entries of the workspace folder. A folder inserts
 its name with a slash and opens the next completion. After the number sign of
 a Markdown target it offers the anchors of the headings of that document,
-with the heading text as the detail. The completion opens on `(`, `/` and
-`#`, and on the completion key of the editor. A link to a web address, an
-absolute path or a bare fragment gets no completion.
+with the heading text as the detail. When the label of the link is empty or
+holds only spaces, a heading also replaces the label with its text, without
+brackets and with single spaces (`headingLabel` in `src/links.ts`). A
+heading whose text holds the end of a block comment of the language, such as
+`*/`, fills no label, so that it cannot end the comment. The completion opens
+on `(`, `/` and `#`, and on the completion key of the editor. A link to a web
+address, an absolute path or a bare fragment gets no completion.
 
 ### Scope and limits
 

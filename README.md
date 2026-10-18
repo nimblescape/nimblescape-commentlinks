@@ -5,7 +5,7 @@ label of a link, and Ctrl+click opens the target at the heading that the
 link names. While you write a link, the extension completes its paths and
 headings.
 
-![A Go file in VS Code: the comments show the labels of their links, a new link is written with the completion, and Ctrl+click opens requirements.md at its heading](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+![A Go file in VS Code: the comments show the labels of their links, a new link starts with an empty label, the completion writes its path, its heading and its label, and Ctrl+click opens requirements.md at its heading](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
 
 ## What the extension does on your computer
 
@@ -49,7 +49,9 @@ describes each step and where its protection ends.
   to its workspace folder, for example
   `Open docs/architecture/unit.md#a-unit-001`.
 - **Completion.** While you write a link, the extension completes the
-  folders and files of its path and the headings of a Markdown target.
+  folders and files of its path and the headings of a Markdown target. A
+  link that starts with an empty label, `[](`, takes the text of the chosen
+  heading as its label.
 - **Languages.** The extension reads the comments of Go, JavaScript,
   TypeScript, JSON, CSS, HTML, XML, YAML, shell scripts, Dockerfiles, SQL and
   more file types: see [Files](#files).
@@ -70,6 +72,7 @@ opens `unit.md` at the heading `A-UNIT-001`.
 | Follow a link | Ctrl+click on the label | Opens the target at the heading that its fragment names. |
 | Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
 | Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
+| Take the label from a heading | Write `[](`, complete the path, type `#` and choose a heading | Writes the text of the heading into the empty label. A label that you wrote stays as it is. |
 
 On macOS, follow a link with Cmd+click; the completion key is Ctrl+Space
 there too. When the setting `editor.multiCursorModifier` is `ctrlCmd`, VS Code

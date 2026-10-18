@@ -39,7 +39,7 @@
  */
 
 import * as vscode from 'vscode';
-import { type CommentLink, commentLinks, defaultEditor, headingLine, headings, linkUnderCursor, syntaxes } from './links';
+import { type CommentLink, commentLinks, defaultEditor, headingLabel, headingLine, headings, linkUnderCursor, syntaxes } from './links';
 
 /** openCommand names the command that opens the target of a link. */
 const openCommand = 'nimblescape.commentlinks.open';
@@ -296,8 +296,10 @@ async function hiddenRanges(
  * entries beside the document first, and only in the folders that
  * allowedTarget permits. A folder inserts its name with a slash
  * and opens the next completion. After the number sign of a Markdown target
- * it offers the anchors of the headings of that document. A cursor outside
- * a comment, outside a link or in a link to a web address gets nothing.
+ * it offers the anchors of the headings of that document, and a link with an
+ * empty label takes the text of the chosen heading as its label. A cursor
+ * outside a comment, outside a link or in a link to a web address gets
+ * nothing.
  * @param document - The document.
  * @param position - The position of the cursor.
  * @returns The completions.
@@ -316,6 +318,10 @@ async function completeTarget(
   if (link.fragment !== undefined) {
     if (!/\.md$/i.test(link.path)) return undefined;
     const range = new vscode.Range(document.positionAt(link.start + link.path.length + 1), position);
+    const labelRange =
+      link.label.trim() === ''
+        ? new vscode.Range(document.positionAt(link.labelStart), document.positionAt(link.labelStart + link.label.length))
+        : undefined;
     for (const base of bases) {
       const target = vscode.Uri.joinPath(base.uri, link.path);
       if (!allowedTarget(document.uri, folder?.uri, target)) continue;
@@ -329,6 +335,8 @@ async function completeTarget(
         const item = new vscode.CompletionItem(heading.slug, vscode.CompletionItemKind.Reference);
         item.detail = heading.text;
         item.range = range;
+        const label = labelRange && headingLabel(heading.text, syntax);
+        if (label) item.additionalTextEdits = [vscode.TextEdit.replace(labelRange, label)];
         return item;
       });
     }
