@@ -86,22 +86,24 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   another extension, or a `command:` link of another source, cannot open any
   other file through it.
 - **The completion.** While you write a link, the completion lists folders
-  and reads Markdown files only inside the same folders. A chosen heading
-  fills only a label that is empty or holds only white space. The label
-  keeps only letters, combining marks, digits, spaces and the characters
-  `. , ( ) _ / + -` of the heading text. Every other character becomes a
-  space, for example quotes, `#`, `@`, `:`, `$`, backticks, backslashes,
-  `*`, `<`, `>` and invisible characters, such as variation selectors. A run
-  of hyphens becomes one hyphen, and a heading without letters or digits
-  fills no label. So the text of a Markdown file cannot end the comment
-  (`*/`, `-->`, `--!>`), open a nested comment (`/*` in SQL), put `--` into
-  an XML comment, start a new line, add a control of the text direction or
-  form a comment that a tool reads, such as `#__PURE__`, `@ts-ignore` or a
-  modeline of Vim (`vim: set …`). The extension finds comments with a simple
-  scanner, so it also takes some text for a comment that is none, for
-  example a line that starts with `#` in a shell here-document or in a
-  single-quoted string over several lines. The kept characters cannot end
-  such a string and have no special meaning in it.
+  and reads Markdown files only inside the same folders. A chosen file or
+  heading fills only a label that is empty or holds only white space, with the
+  name of the file or the text of the heading; a heading also replaces a label
+  that equals the name of its file. The label keeps only letters, combining
+  marks, digits, spaces and the characters `. , ( ) _ / + -` of that name or
+  text. Every other character becomes a space, for example quotes, `#`, `@`,
+  `:`, `$`, backticks, backslashes, `*`, `<`, `>` and invisible characters,
+  such as variation selectors. A run of hyphens becomes one hyphen, and a name
+  or a heading without letters or digits fills no label. So a file name or the
+  text of a Markdown file cannot end the comment (`*/`, `-->`, `--!>`), open a
+  nested comment (`/*` in SQL), put `--` into an XML comment, start a new
+  line, add a control of the text direction or form a comment that a tool
+  reads, such as `#__PURE__`, `@ts-ignore` or a modeline of Vim
+  (`vim: set …`). The extension finds comments with a simple scanner, so it
+  also takes some text for a comment that is none, for example a line that
+  starts with `#` in a shell here-document or in a single-quoted string over
+  several lines. The kept characters cannot end such a string and have no
+  special meaning in it.
 - **The editor.** The command opens the target with the editor that the
   window associates with its file type (the setting
   `workbench.editorAssociations`). For a fragment, the command reads the text

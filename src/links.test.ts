@@ -14,7 +14,7 @@ import {
   commentSpans,
   defaultEditor,
   globPattern,
-  headingLabel,
+  labelFrom,
   headingLine,
   headings,
   headingSlug,
@@ -171,26 +171,27 @@ test('a link being written is found in a comment only and only for a local relat
   expect(linkUnderCursor(source, 5, syntaxes.go)).toBe(undefined);
 });
 
-test('the label from a heading keeps letters, digits and simple punctuation and never ends a comment or a string', () => {
-  expect(headingLabel('R-ORDER-003')).toBe('R-ORDER-003');
-  expect(headingLabel('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop 100 12');
-  expect(headingLabel('  [Draft]   order  `total` **now** ')).toBe('Draft order total now');
-  expect(headingLabel('[]')).toBe(undefined);
-  expect(headingLabel('\t')).toBe(undefined);
-  expect(headingLabel('Ends */ here, opens /* there')).toBe('Ends / here, opens / there');
-  expect(headingLabel('Ends --> <script>x</script>')).toBe('Ends - script x /script');
-  expect(headingLabel('Ends --!> here')).toBe('Ends - here');
-  expect(headingLabel('CLI --help')).toBe('CLI -help');
-  expect(headingLabel('a-\u200b-b')).toBe('a- -b');
-  expect(headingLabel('Limits\u0085debug: true\u2028x\fy')).toBe('Limits debug true x y');
-  expect(headingLabel('Admin\u202e\u2066 rights\u200b')).toBe('Admin rights');
-  expect(headingLabel('Run $(cmd), `cmd` and a\\b')).toBe('Run (cmd), cmd and a b');
-  expect(headingLabel("Notes'; touch x; : '\"")).toBe('Notes touch x');
-  expect(headingLabel('Orders vim: set binary noeol :')).toBe('Orders vim set binary noeol');
-  expect(headingLabel('Runtime @jsxImportSource x, audit #__PURE__')).toBe('Runtime jsxImportSource x, audit __PURE__');
-  expect(headingLabel('Order\ufe0f\u034fx\u{e0100}')).toBe('Order x');
-  expect(headingLabel('\u3164')).toBe(undefined);
-  expect(headingLabel('\u0301 -')).toBe(undefined);
+test('the label from a heading or a file name keeps letters, digits and simple punctuation and never ends a comment or a string', () => {
+  expect(labelFrom('R-ORDER-003')).toBe('R-ORDER-003');
+  expect(labelFrom('requirements.md')).toBe('requirements.md');
+  expect(labelFrom('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop 100 12');
+  expect(labelFrom('  [Draft]   order  `total` **now** ')).toBe('Draft order total now');
+  expect(labelFrom('[]')).toBe(undefined);
+  expect(labelFrom('\t')).toBe(undefined);
+  expect(labelFrom('Ends */ here, opens /* there')).toBe('Ends / here, opens / there');
+  expect(labelFrom('Ends --> <script>x</script>')).toBe('Ends - script x /script');
+  expect(labelFrom('Ends --!> here')).toBe('Ends - here');
+  expect(labelFrom('CLI --help')).toBe('CLI -help');
+  expect(labelFrom('a-\u200b-b')).toBe('a- -b');
+  expect(labelFrom('Limits\u0085debug: true\u2028x\fy')).toBe('Limits debug true x y');
+  expect(labelFrom('Admin\u202e\u2066 rights\u200b')).toBe('Admin rights');
+  expect(labelFrom('Run $(cmd), `cmd` and a\\b')).toBe('Run (cmd), cmd and a b');
+  expect(labelFrom("Notes'; touch x; : '\"")).toBe('Notes touch x');
+  expect(labelFrom('Orders vim: set binary noeol :')).toBe('Orders vim set binary noeol');
+  expect(labelFrom('Runtime @jsxImportSource x, audit #__PURE__')).toBe('Runtime jsxImportSource x, audit __PURE__');
+  expect(labelFrom('Order\ufe0f\u034fx\u{e0100}')).toBe('Order x');
+  expect(labelFrom('\u3164')).toBe(undefined);
+  expect(labelFrom('\u0301 -')).toBe(undefined);
 });
 
 test('the default editor of a resource follows the editor associations as the editor matches them', () => {
