@@ -164,10 +164,14 @@ the file first, then the entries of the workspace folder. A folder inserts
 its name with a slash and opens the next completion. After the number sign of
 a Markdown target it offers the anchors of the headings of that document,
 with the heading text as the detail. When the label of the link is empty or
-holds only spaces, a heading also replaces the label with its text, without
-brackets and with single spaces (`headingLabel` in `src/links.ts`). A
-heading whose text holds the end of a block comment of the language, such as
-`*/`, fills no label, so that it cannot end the comment. The completion opens
+holds only white space, a heading also replaces the label with its text
+(`headingLabel` in `src/links.ts`). The label keeps only letters, combining
+marks, digits, spaces and the characters `. , : ; ! ? ( ) ' _ / + & # % = @ -`;
+every other character becomes a space, a run of hyphens becomes one hyphen
+and a run of spaces one space. So no label ends or opens a comment, holds
+`--` in an XML comment, breaks the line or holds a character that a shell
+expands. A heading that keeps no text, or whose label still holds a comment
+marker of the language, fills no label. The completion opens
 on `(`, `/` and `#`, and on the completion key of the editor. A link to a web
 address, an absolute path or a bare fragment gets no completion.
 
