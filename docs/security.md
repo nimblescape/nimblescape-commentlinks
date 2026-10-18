@@ -89,16 +89,19 @@ counts as no file: it gets no link, and it stays fully visible. An example is
   and reads Markdown files only inside the same folders. A chosen heading
   fills only a label that is empty or holds only white space. The label
   keeps only letters, combining marks, digits, spaces and the characters
-  `. , : ; ! ? ( ) ' _ / + & # % = @ -` of the heading text; every other
-  character becomes a space, and a run of hyphens becomes one hyphen. So the
-  text of a Markdown file cannot end the comment (`*/`, `-->`, `--!>`), open
-  a nested comment (`/*` in SQL), put `--` into an XML comment, start a new
-  line or add a format character, such as a control of the text direction.
-  When the label still holds a comment marker of the language, or no text
-  remains, the heading fills no label. The extension finds comments with a
-  simple scanner, so a line of a shell here-document that starts with `#`
-  also counts as a comment; the kept characters have no special meaning
-  there either, because `$`, backticks and backslashes do not remain.
+  `. , : ( ) _ / + -` of the heading text. Every other character becomes a
+  space, for example quotes, `#`, `@`, `$`, backticks, backslashes, `*`, `<`,
+  `>` and invisible characters, such as variation selectors. A run of
+  hyphens becomes one hyphen, and a heading without letters or digits fills
+  no label. So the text of a Markdown file cannot end the comment (`*/`,
+  `-->`, `--!>`), open a nested comment (`/*` in SQL), put `--` into an XML
+  comment, start a new line, add a control of the text direction or form a
+  comment that a tool reads, such as `#__PURE__` or `@ts-ignore`. The
+  extension finds comments with a simple scanner, so it also takes some text
+  for a comment that is none, for example a line that starts with `#` in a
+  shell here-document or in a single-quoted string over several lines. The
+  kept characters cannot end such a string and have no special meaning in
+  it.
 - **The editor.** The command opens the target with the editor that the
   window associates with its file type (the setting
   `workbench.editorAssociations`). For a fragment, the command reads the text

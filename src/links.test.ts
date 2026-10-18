@@ -171,20 +171,24 @@ test('a link being written is found in a comment only and only for a local relat
   expect(linkUnderCursor(source, 5, syntaxes.go)).toBe(undefined);
 });
 
-test('the label from a heading keeps letters, digits and simple punctuation and never ends or opens a comment', () => {
-  expect(headingLabel('R-ORDER-003', syntaxes.go)).toBe('R-ORDER-003');
-  expect(headingLabel('Größe und Maße (Teil 4), Kunde & Shop: 100% #12', syntaxes.go)).toBe('Größe und Maße (Teil 4), Kunde & Shop: 100% #12');
-  expect(headingLabel('  [Draft]   order  `total` **now** ', syntaxes.go)).toBe('Draft order total now');
-  expect(headingLabel('[]', syntaxes.go)).toBe(undefined);
-  expect(headingLabel('\t', syntaxes.go)).toBe(undefined);
-  expect(headingLabel('Ends */ here', syntaxes.go)).toBe('Ends / here');
-  expect(headingLabel('Opens /* here', syntaxes.sql)).toBe('Opens / here');
-  expect(headingLabel('Ends --> <script>x</script>', syntaxes.html)).toBe('Ends - script x /script');
-  expect(headingLabel('Ends --!> here', syntaxes.html)).toBe('Ends -! here');
-  expect(headingLabel('CLI --help', syntaxes.xml)).toBe('CLI -help');
-  expect(headingLabel('Limits\u0085debug: true\u2028x\fy', syntaxes.yaml)).toBe('Limits debug: true x y');
-  expect(headingLabel('Admin\u202e\u2066 rights\u200b', syntaxes.go)).toBe('Admin rights');
-  expect(headingLabel('Run $(cmd), `cmd` and a\\b', syntaxes.shellscript)).toBe('Run (cmd), cmd and a b');
+test('the label from a heading keeps letters, digits and simple punctuation and never ends a comment or a string', () => {
+  expect(headingLabel('R-ORDER-003')).toBe('R-ORDER-003');
+  expect(headingLabel('Größe und Maße (Teil 4), Kunde & Shop: 100% #12')).toBe('Größe und Maße (Teil 4), Kunde Shop: 100 12');
+  expect(headingLabel('  [Draft]   order  `total` **now** ')).toBe('Draft order total now');
+  expect(headingLabel('[]')).toBe(undefined);
+  expect(headingLabel('\t')).toBe(undefined);
+  expect(headingLabel('Ends */ here, opens /* there')).toBe('Ends / here, opens / there');
+  expect(headingLabel('Ends --> <script>x</script>')).toBe('Ends - script x /script');
+  expect(headingLabel('Ends --!> here')).toBe('Ends - here');
+  expect(headingLabel('CLI --help')).toBe('CLI -help');
+  expect(headingLabel('Limits\u0085debug: true\u2028x\fy')).toBe('Limits debug: true x y');
+  expect(headingLabel('Admin\u202e\u2066 rights\u200b')).toBe('Admin rights');
+  expect(headingLabel('Run $(cmd), `cmd` and a\\b')).toBe('Run (cmd), cmd and a b');
+  expect(headingLabel("Notes'; touch x; : '\"")).toBe('Notes touch x :');
+  expect(headingLabel('Runtime @jsxImportSource x, audit #__PURE__')).toBe('Runtime jsxImportSource x, audit __PURE__');
+  expect(headingLabel('Order\ufe0f\u034fx\u{e0100}')).toBe('Order x');
+  expect(headingLabel('\u3164')).toBe(undefined);
+  expect(headingLabel('\u0301 -')).toBe(undefined);
 });
 
 test('the default editor of a resource follows the editor associations as the editor matches them', () => {
