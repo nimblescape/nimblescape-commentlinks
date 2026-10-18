@@ -10,8 +10,8 @@
  * window, the cursor that a followed link keeps, the hiding of link targets
  * outside the lines of the cursor, the handling of a target that resolves
  * nowhere, the activation events and the setting of the manifest, the files
- * of the package, and the links and the settings table of its documents. No
- * installed editor is touched.
+ * of the package, and the links, the images and the settings table of its
+ * documents. No installed editor is touched.
  */
 
 import * as fs from 'node:fs/promises';
@@ -819,6 +819,28 @@ test('the documents of the package link outside code to web addresses or fragmen
     for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
       expect(match[1], `${name} links to the relative target ${match[1]}`).toMatch(/^(https:\/\/|#)/);
     }
+  }
+});
+
+// The Marketplace shows no SVG image, and the package keeps a relative image
+// address unchanged, so the README shows the GIF and PNG files of docs/images/
+// through their full addresses on the branch main. vsce does not check them,
+// because --no-rewrite-relative-links also turns off its checks of images.
+test('the images of the README are GIF or PNG files of docs/images/ on the branch main', async () => {
+  const base = 'https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/';
+  const signatures = { gif: 'GIF8', png: '\x89PNG' };
+  const readme = (await fs.readFile(path.join(repository, 'README.md'), 'utf8')).replace(
+    /^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[^\n]*$/gm,
+    '',
+  );
+  expect(readme, 'the README shows its images with Markdown only').not.toMatch(/<img\b/i);
+  const images = [...readme.matchAll(/!\[[^\]\n]*\]\(([^)\s]+)(?:\s+"[^"\n]*")?\)/g)].map((match) => match[1]);
+  expect(images.length, 'the README shows an image').toBeGreaterThan(0);
+  for (const image of images) {
+    const match = /^https:\/\/raw\.githubusercontent\.com\/nimblescape\/nimblescape-commentlinks\/main\/docs\/images\/[\w-]+\.(gif|png)$/.exec(image);
+    expect(match, image).not.toBe(null);
+    const file = await fs.readFile(path.join(repository, image.slice(base.length)));
+    expect(file.subarray(0, 4).toString('latin1'), `${image} is no ${match![1]} file`).toBe(signatures[match![1] as 'gif' | 'png']);
   }
 });
 

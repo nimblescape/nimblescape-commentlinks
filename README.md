@@ -1,35 +1,77 @@
 # nimblescape Comment Links
 
 Makes the Markdown links in code comments clickable. A comment shows only the
-label of a link, and a click opens the target at the heading that the link
-names. While you write a link, the extension completes its paths and
+label of a link, and Ctrl+click opens the target at the heading that the
+link names. While you write a link, the extension completes its paths and
 headings.
+
+![A Go file in VS Code: the comments show the labels of their links, the completion writes a new link, and Ctrl+click opens requirements.md at its heading](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+
+## What the extension does on your computer
+
+- **When it works.** The extension starts when a file of a
+  [listed language](#files) opens in VS Code, for example a Go or a YAML
+  file. It also runs in Restricted Mode, because it only reads files, and in
+  virtual workspaces, because it reads files only through VS Code. It does
+  not run in VS Code for the Web.
+- **Files that it reads.** It reads the text of the open files of the listed
+  languages and finds the Markdown links in their comments. For each link, it
+  asks VS Code whether the target file exists. It reads a Markdown target
+  when you follow a link to a heading or complete a heading, and it lists a
+  folder when you complete a path. It reads and lists nothing outside the
+  folders that a link may name: the folders of the workspace and, for a file
+  outside them, the folder of that file and its subfolders.
+- **Hidden targets.** A comment shows only the label of a resolved link. The
+  target stays in the file, and the lines of the cursor show the whole link.
+- **Files and data.** It changes no file and no setting, and it writes
+  nothing to the disk. It keeps the resolved links in memory while the window
+  is open.
+- **Network.** It makes no network connection, starts no process and collects
+  no telemetry. In a virtual workspace, the provider of its file system may
+  download the files that the extension reads.
+
+[Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
+describes each step and where its protection ends.
+
+## Features
+
+- **Clickable links.** In a comment, the label of a Markdown link
+  `[label](target)` becomes a link. Ctrl+click opens the target with the
+  editor that VS Code uses for its file type. A link with a fragment opens a
+  Markdown file at the heading that the fragment names.
+- **Hidden targets.** A comment shows only the label of a resolved link, as
+  rendered Markdown does. The lines of the cursor show the whole link, so
+  that you can edit it. A link whose target resolves to no file stays fully
+  visible, so that you see a broken link.
+- **Tooltip.** The tooltip of a link names the file that it opens, relative
+  to its workspace folder, for example
+  `Open docs/architecture/unit.md#a-unit-001`.
+- **Completion.** While you write a link, the extension completes the
+  folders and files of its path and the headings of a Markdown target.
+- **Languages.** The extension reads the comments of Go, JavaScript,
+  TypeScript, JSON, CSS, HTML, XML, YAML, shell scripts, Dockerfiles, SQL and
+  more file types: see [Files](#files).
+
+## Usage
+
+In a comment, write a Markdown link to a file of the workspace:
 
 ```go
 // Assures: [A-UNIT-001](docs/architecture/unit.md#a-unit-001)
 ```
 
-The comment above shows `// Assures: A-UNIT-001`, and a click on
-`A-UNIT-001` opens `unit.md` at the heading `A-UNIT-001`. The lines of the
-cursor show the whole link, so that it can be edited.
+The comment shows `// Assures: A-UNIT-001`, and Ctrl+click on `A-UNIT-001`
+opens `unit.md` at the heading `A-UNIT-001`.
 
-## What the extension does on your computer
+| Action | How | Effect |
+| --- | --- | --- |
+| Follow a link | Ctrl+click on the label | Opens the target, at the heading of its fragment. |
+| Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
+| Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
 
-- It reads the text of the open files of the [listed languages](#files) and
-  finds the links in their comments.
-- For each link, it asks VS Code whether the target file exists. It reads a
-  Markdown target when you follow a link to a heading or complete a heading,
-  and it lists a folder when you complete a path.
-- A link opens only a file inside a folder of the workspace. A file that is
-  not inside a folder of the workspace can also link to the files inside its
-  own folder and its subfolders.
-- It changes no file and no setting, starts no process, makes no network
-  connection and collects no telemetry.
-- It also runs in Restricted Mode, because it only reads files. It does not
-  run in VS Code for the Web.
-
-[Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
-describes each step and where its protection ends.
+On macOS, follow a link with Cmd+click; the completion key is Ctrl+Space
+there too. When the setting `editor.multiCursorModifier` is `ctrlCmd`, VS Code
+follows links with Alt+click (Option+click on macOS).
 
 ## Link resolution
 
@@ -44,8 +86,7 @@ A target outside the folders of the workspace counts as no file, for example
 a file that is not inside a folder of the workspace, a target inside the
 folder of that file counts too.
 
-A click opens the target with the editor that VS Code uses for its file type.
-A fragment such as `#a-unit-001` opens a Markdown file at the heading with
+A fragment such as `#a-unit-001` names the heading of a Markdown file with
 that anchor. The anchor is the heading text in lower case, without
 punctuation and with hyphens for spaces. The extension adds no link to a web
 address, an absolute path, a bare fragment or a target without a file, and
@@ -77,6 +118,25 @@ space. Markdown files keep the link handling of VS Code.
 | Setting | Default | Effect |
 | --- | --- | --- |
 | `nimblescape.commentlinks.hideTargets` | `true` | Shows only the label of a resolved link. The value `false` shows every link completely. |
+
+## Limits
+
+- The extension reads links in comments only: not in a string, not in a
+  Markdown file and not in a language outside the table of
+  [Files](#files). In a script or style block of an HTML file, the comments
+  of JavaScript and CSS are not read.
+- A link opens a Markdown target at its heading in the text editor and in
+  the Markdown preview. The Markdown Editor of VS Code opens the target at the
+  start of the document, because VS Code does not tell that editor which line
+  to show
+  ([microsoft/vscode#289785](https://github.com/microsoft/vscode/issues/289785)).
+  Another editor of Markdown files decides itself whether it shows the
+  heading.
+- The label of a link is text of the file, and it can name a file other than
+  the target. Before you follow a link in a file that you do not trust, read
+  its tooltip, or put the cursor on its line to show the whole link.
+  [Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#known-limits)
+  lists the known limits, for example symbolic links.
 
 ---
 
