@@ -5,7 +5,7 @@ label of a link, and Ctrl+click opens the target at the heading that the
 link names. While you write a link, the extension completes its paths and
 headings.
 
-![A Go file in VS Code: the comments show the labels of their links, the completion writes a new link, and Ctrl+click opens requirements.md at its heading](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+![A Go file in VS Code: the comments show the labels of their links, a new link is written with the completion, and Ctrl+click opens requirements.md at its heading](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
 
 ## What the extension does on your computer
 
@@ -20,7 +20,9 @@ headings.
   when you follow a link to a heading or complete a heading, and it lists a
   folder when you complete a path. It reads and lists nothing outside the
   folders that a link may name: the folders of the workspace and, for a file
-  outside them, the folder of that file and its subfolders.
+  outside them, the folder of that file and its subfolders. The check
+  compares paths, so a symbolic link inside these folders can lead outside
+  them (see [Limits](#limits)).
 - **Hidden targets.** A comment shows only the label of a resolved link. The
   target stays in the file, and the lines of the cursor show the whole link.
 - **Files and data.** It changes no file and no setting, and it writes
@@ -65,7 +67,7 @@ opens `unit.md` at the heading `A-UNIT-001`.
 
 | Action | How | Effect |
 | --- | --- | --- |
-| Follow a link | Ctrl+click on the label | Opens the target, at the heading of its fragment. |
+| Follow a link | Ctrl+click on the label | Opens the target at the heading that its fragment names. |
 | Show the whole link | Move the cursor to its line | Shows the brackets and the target, so that you can edit them. |
 | Complete a target | Type `(`, `/` or `#` in a link, or press Ctrl+Space | Offers the folders and files of the path, and after `#` the headings of a Markdown file. |
 
@@ -86,16 +88,16 @@ A target outside the folders of the workspace counts as no file, for example
 a file that is not inside a folder of the workspace, a target inside the
 folder of that file counts too.
 
-A fragment such as `#a-unit-001` names the heading of a Markdown file with
-that anchor. The anchor is the heading text in lower case, without
-punctuation and with hyphens for spaces. The extension adds no link to a web
-address, an absolute path, a bare fragment or a target without a file, and
-such a link stays fully visible.
+A fragment such as `#a-unit-001` names the heading of a Markdown file
+(`.md`) with that anchor. The anchor is the heading text in lower case,
+without punctuation and with hyphens for spaces. The extension adds no link
+to a web address, an absolute path, a bare fragment or a target without a
+file, and such a link stays fully visible.
 
 ## Files
 
-The extension reads the comments of these files. Text in a string is no
-comment.
+The extension reads the comments of these files. Text in a string is not
+a comment.
 
 | Files | Comments |
 | --- | --- |
@@ -122,21 +124,23 @@ space. Markdown files keep the link handling of VS Code.
 ## Limits
 
 - The extension reads links in comments only: not in a string, not in a
-  Markdown file and not in a language outside the table of
-  [Files](#files). In a script or style block of an HTML file, the comments
-  of JavaScript and CSS are not read.
+  Markdown file and not in a file of a language that the table of
+  [Files](#files) does not list. In a script or style block of an HTML file,
+  the comments of JavaScript and CSS are not read.
 - A link opens a Markdown target at its heading in the text editor and in
   the Markdown preview. The Markdown Editor of VS Code opens the target at the
   start of the document, because VS Code does not tell that editor which line
   to show
   ([microsoft/vscode#289785](https://github.com/microsoft/vscode/issues/289785)).
-  Another editor of Markdown files decides itself whether it shows the
-  heading.
-- The label of a link is text of the file, and it can name a file other than
+  Another editor of Markdown files decides whether it shows the heading.
+- The label of a link is text in the file, and it can name a file other than
   the target. Before you follow a link in a file that you do not trust, read
   its tooltip, or put the cursor on its line to show the whole link.
+- The check of a target compares paths and does not follow symbolic links. A
+  symbolic link inside a folder of the workspace can point to a file or a
+  folder anywhere on the computer, and a link through it opens that file.
   [Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#known-limits)
-  lists the known limits, for example symbolic links.
+  lists the known limits.
 
 ---
 
