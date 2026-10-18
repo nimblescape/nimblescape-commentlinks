@@ -444,9 +444,8 @@ export function headings(markdown: string): Heading[] {
  * without $, backticks and backslashes no label holds a character that a
  * shell expands, and without #, @ and : no label forms a comment that a tool
  * reads, such as #__PURE__, @ts-ignore or a modeline of Vim (vim: set …).
- * Line breaks, other white space and
- * format characters, such as the controls of the text direction, do not
- * remain either.
+ * Line breaks, other white space and format characters, such as the
+ * controls of the text direction, do not remain either.
  */
 const labelOthers = /[^\p{L}\p{M}\p{N} .,()_\/+-]+/gu;
 
