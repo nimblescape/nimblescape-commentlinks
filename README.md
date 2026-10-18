@@ -11,9 +11,7 @@ headings.
 
 - **When it works.** The extension starts when a file of a
   [listed language](#files) opens in VS Code, for example a Go or a YAML
-  file. It also runs in Restricted Mode, because it only reads files, and in
-  virtual workspaces, because it reads files only through VS Code. It does
-  not run in VS Code for the Web.
+  file. It does not run in VS Code for the Web.
 - **Files that it reads.** It reads the text of the open files of the listed
   languages and finds the Markdown links in their comments. For each link, it
   asks VS Code whether the target file exists. It reads a Markdown target
@@ -31,6 +29,9 @@ headings.
 - **Network.** It makes no network connection, starts no process and collects
   no telemetry. In a virtual workspace, the provider of its file system may
   download the files that the extension reads.
+- **Restricted Mode and virtual workspaces.** The extension works with all
+  features in Restricted Mode, because it only reads files, and in virtual
+  workspaces, because it reads files only through VS Code.
 
 [Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
 describes each step and where its protection ends.
