@@ -17,17 +17,18 @@ and [security.md](docs/security.md) describes the security model.
 | `docs/security.md` | The security model: what the extension reads, which files a link opens, and where its protection ends. The README links it. |
 | `docs/images/` | The image of the README: `comment-links.gif`, a screen recording of VS Code that shows the hidden targets, the completion of a link with an empty label and a Ctrl+click on a link. It has the style of the GIFs of nimblescape PlantUML and nimblescape Mindbug: a VS Code window of 1440 × 816 pixels at a zoom of 120 % in the theme Dark Modern, a blue band above it with the number and the caption of each scene, and for 1.6 s after each key press a label with the key and its command. GIF and PNG files only, because the Marketplace shows no SVG image. The README shows its images with full `https` addresses, because the Marketplace shows no image with a relative address; the addresses name the branch `main`. They are not part of the package. A test checks that each image of the README is a GIF or PNG file in this folder. |
 | `esbuild.mjs` | Bundles `src/extension.ts` and the modules that it imports into `dist/extension.js`. The editor API stays outside the bundle. The bundle is readable JavaScript: not minified. A production build (`--production`) has no source map. |
-| `tsconfig.json` | The TypeScript settings of the type check: strict, and no output, because esbuild builds the bundle. |
+| `tsconfig.json` | The TypeScript settings of the type check with TypeScript 6.0: strict, and no output, because esbuild builds the bundle. They are the same in every nimblescape extension, except the files they include. |
+| `eslint.config.mjs` | The rules of `npm run lint`: the recommended rules of ESLint and of typescript-eslint, and the rules that find promises that nobody waits for, with the types of `tsconfig.json`. The file is the same in every nimblescape extension, except its lists of the ignored files and of the scripts of webviews. |
 | `vitest.config.mts` | The settings of the tests: the files `src/**/*.test.ts` and `scripts/**/*.test.mjs` on Node. |
 | `package.json` | The extension manifest. The section [Manifest](#manifest) explains it. |
 | `package-lock.json` | The locked development tools. npm writes this file, and nobody edits it by hand. |
 | `.node-version` | The Node release of the development tools. `actions/setup-node` in the workflows and local Node version managers read it. |
 | `.vscodeignore` | Lists the files of the package: `dist/extension.js`, `resources/icon.png`, `package.json`, `README.md`, `CHANGELOG.md`, `LICENSE` and `SUPPORT.md`. |
-| `.github/workflows/ci.yml` | Checks the types, tests and packages every push to `main`, every pull request and the commit of every release. The release publishes the VSIX of this workflow, so a change of it needs a dry run (rule 4 of the [release rules](#release-rules)). |
+| `.github/workflows/ci.yml` | Checks the types and the code (ESLint), tests and packages every push to `main`, every pull request and the commit of every release. The release publishes the VSIX of this workflow, so a change of it needs a dry run (rule 4 of the [release rules](#release-rules)). |
 | `.github/workflows/release.yml` | Releases a version on a manual start: commits the version to a temporary branch, tests and packages it with `ci.yml`, and only then moves `main` to it, creates its tag and GitHub release and publishes it to the Marketplace. A dry run tests without a change. The section [Release](#release) explains it. |
 | `.github/workflows/release-dry-run.yml` | Fails on a pull request that changes the release process (`release.yml`, `ci.yml` or `scripts/release-checks.mjs`) until a dry run on its branch tested the change (rule 4 of the [release rules](#release-rules)). |
 | `.github/workflows/marketplace-identity.yml` | Prints the Marketplace member ID of the publishing identity, to check the setup of the repository. |
-| `.github/dependabot.yml` | Proposes weekly updates of the development tools and of the pinned actions. |
+| `.github/dependabot.yml` | Proposes weekly updates of the development tools and of the pinned actions. TypeScript stays at 6.0.3, as in every nimblescape extension. |
 | `scripts/marketplace-setup.sh` | Sets up the Marketplace publishing of the repository. The section [Setup of a repository](#setup-of-a-repository) explains it. |
 | `scripts/release-checks.mjs`, `scripts/release-checks.test.mjs` | The check of rule 4 of the [release rules](#release-rules), which the workflows run, and its test. |
 | `scripts/install-local.mjs`, `scripts/uninstall-local.mjs` | Install the built package into every profile of the VS Code of this computer, and remove it again. |
@@ -36,7 +37,8 @@ and [security.md](docs/security.md) describes the security model.
 ## Development
 
 The extension uses VS Code APIs and has no npm runtime dependency. The
-development tools are TypeScript, esbuild, vitest and
+development tools are TypeScript 6.0, ESLint with typescript-eslint, esbuild,
+vitest and
 [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce), the Microsoft tool
 that packages and publishes extensions. Everything runs on Node.js 24: the
 release in `.node-version` for the tools and CI, and the runtime of VS Code
@@ -46,6 +48,7 @@ release in `.node-version` for the tools and CI, and the runtime of VS Code
 | --- | --- |
 | `npm ci --ignore-scripts` | Installs the locked development tools and runs no install script of a dependency. |
 | `npm run typecheck` | Checks the types with `tsc`. esbuild does not check them. |
+| `npm run lint` | Checks the code with ESLint (`eslint.config.mjs`). `npm run lint -- --fix` corrects what ESLint can correct itself. |
 | `npm test` | Runs the tests with vitest. The tests touch no installed editor. |
 | `npm run build` | Bundles `dist/extension.js` with a source map. |
 | `npm run package` | Builds `nimblescape-commentlinks-<version>.vsix` with vsce, which first runs the production build (`vscode:prepublish`). vsce also validates the manifest. |

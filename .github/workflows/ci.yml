@@ -2,13 +2,13 @@
 # © 2026 Hannes Stauss (scalarion@nimblescape.com)
 # Licensed under the MIT License. See LICENSE in the repository root for details.
 
-# Check and test the extension and build its package for every push to main
-# and every pull request. The job installs the locked development tools,
-# checks the types, runs the tests and packages the VSIX with vsce, which
-# first bundles the extension with esbuild and also validates the manifest and
-# the README. The VSIX stays a workflow artifact for inspection. This workflow
-# publishes nothing: the release workflow calls it for the commit of a version
-# and publishes the VSIX of that call. A change of this file changes the
+# Check and test the extension and build its package for every push to main and
+# every pull request. The job installs the locked development tools, checks the
+# types and the code (ESLint), runs the tests and packages the VSIX with vsce,
+# which first bundles the extension with esbuild and also validates the manifest
+# and the README. The VSIX stays a workflow artifact for inspection. This
+# workflow publishes nothing: the release workflow calls it for the commit of a
+# version and publishes the VSIX of that call. A change of this file changes the
 # release process: its pull request needs a dry run (rule 4).
 
 name: CI
@@ -53,6 +53,9 @@ jobs:
 
       - name: Check the types
         run: npm run typecheck
+
+      - name: Check the code with ESLint
+        run: npm run lint
 
       - name: Run the tests
         run: npm test

@@ -40,6 +40,7 @@
   "scripts": {
     "build": "node esbuild.mjs",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint",
     "test": "vitest run",
     "vscode:prepublish": "node esbuild.mjs --production",
     "package": "vsce package --no-dependencies --no-rewrite-relative-links",
@@ -47,11 +48,15 @@
     "uninstall-local": "node scripts/uninstall-local.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
     "@types/vscode": "~1.125.0",
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
-    "typescript": "^7.0.2",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.1",
     "vitest": "^5.0.5"
   },
   "extensionKind": [

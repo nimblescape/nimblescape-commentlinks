@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const refreshAll = (): void => {
     for (const editor of vscode.window.visibleTextEditors) {
       if (!selections.has(editor)) selections.set(editor, editor.selections);
-      refresh(editor);
+      void refresh(editor);
     }
   };
   /**
