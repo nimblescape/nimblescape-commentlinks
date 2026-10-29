@@ -447,7 +447,7 @@ export function headings(markdown: string): Heading[] {
  * Line breaks, other white space and format characters, such as the
  * controls of the text direction, do not remain either.
  */
-const labelOthers = /[^\p{L}\p{M}\p{N} .,()_\/+-]+/gu;
+const labelOthers = /[^\p{L}\p{M}\p{N} .,()_/+-]+/gu;
 
 /**
  * invisible matches a run of characters that show nothing, such as variation
