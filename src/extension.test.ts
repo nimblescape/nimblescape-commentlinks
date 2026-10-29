@@ -953,7 +953,7 @@ test('the documents of the package link outside code to web addresses or fragmen
 // through their full addresses on the branch main. vsce does not check them,
 // because --no-rewrite-relative-links also turns off its checks of images.
 test('the images of the README are GIF or PNG files of docs/images/ on the branch main', async () => {
-  const base = 'https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/';
+  const base = 'https://raw.githubusercontent.com/nimblescape/commentlinks-vscode/main/';
   const signatures = { gif: 'GIF8', png: '\x89PNG' };
   const readme = (await fs.readFile(path.join(repository, 'README.md'), 'utf8'))
     .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[^\n]*$/gm, '')
@@ -963,7 +963,7 @@ test('the images of the README are GIF or PNG files of docs/images/ on the branc
   const images = [...readme.matchAll(/!\[[^\]]*\]\(([^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\)/g)].map((match) => match[1]);
   expect(images.length, 'the README shows an image').toBeGreaterThan(0);
   for (const image of images) {
-    const match = /^https:\/\/raw\.githubusercontent\.com\/nimblescape\/nimblescape-commentlinks\/main\/docs\/images\/[\w-]+\.(gif|png)$/.exec(image);
+    const match = /^https:\/\/raw\.githubusercontent\.com\/nimblescape\/commentlinks-vscode\/main\/docs\/images\/[\w-]+\.(gif|png)$/.exec(image);
     expect(match, image).not.toBe(null);
     const file = await fs.readFile(path.join(repository, image.slice(base.length)));
     expect(file.subarray(0, 4).toString('latin1'), `${image} is not a ${match![1]} file`).toBe(signatures[match![1] as 'gif' | 'png']);

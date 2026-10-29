@@ -24,12 +24,12 @@
   "homepage": "https://nimblescape.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nimblescape/nimblescape-commentlinks.git"
+    "url": "https://github.com/nimblescape/commentlinks-vscode.git"
   },
   "bugs": {
-    "url": "https://github.com/nimblescape/nimblescape-commentlinks/issues"
+    "url": "https://github.com/nimblescape/commentlinks-vscode/issues"
   },
-  "qna": "https://github.com/nimblescape/nimblescape-commentlinks/issues",
+  "qna": "https://github.com/nimblescape/commentlinks-vscode/issues",
   "pricing": "Free",
   "icon": "resources/icon.png",
   "galleryBanner": {
