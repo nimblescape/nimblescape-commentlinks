@@ -5,7 +5,7 @@ label of a link, and Ctrl+click opens the target at the heading that the
 link names. While you write a link, the extension completes its paths and
 headings.
 
-![A Go file in VS Code, in four scenes: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; a blue band above the window names each scene, and a label at the bottom names each pressed key and its command](https://raw.githubusercontent.com/nimblescape/nimblescape-commentlinks/main/docs/images/comment-links.gif)
+![A Go file in VS Code, in four scenes: the cursor on a line shows the whole link, a new link starts with an empty label, the chosen file and then the chosen heading fill the label, and Ctrl+click opens requirements.md at its heading; a blue band above the window names each scene, and a label at the bottom names each pressed key and its command](https://raw.githubusercontent.com/nimblescape/commentlinks-vscode/main/docs/images/comment-links.gif)
 
 ## What the extension does on your computer
 
@@ -33,7 +33,7 @@ headings.
   features in Restricted Mode, because it only reads files, and in virtual
   workspaces, because it reads files only through VS Code.
 
-[Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
+[Security](https://github.com/nimblescape/commentlinks-vscode/blob/main/docs/security.md#what-the-extension-does-on-your-computer)
 describes each step and where its protection ends.
 
 ## Features
@@ -151,11 +151,11 @@ space. Markdown files keep the link handling of VS Code.
 - The check of a target compares paths and does not follow symbolic links. A
   symbolic link inside a folder of the workspace can point to a file or a
   folder anywhere on the computer, and a link through it opens that file.
-  [Security](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/docs/security.md#known-limits)
+  [Security](https://github.com/nimblescape/commentlinks-vscode/blob/main/docs/security.md#known-limits)
   lists the known limits.
 
 ---
 
-[Change log](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/CHANGELOG.md) · [Contributing](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/CONTRIBUTING.md) · [Support](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/SUPPORT.md) · [Issues](https://github.com/nimblescape/nimblescape-commentlinks/issues) · [Source](https://github.com/nimblescape/nimblescape-commentlinks)
+[Change log](https://github.com/nimblescape/commentlinks-vscode/blob/main/CHANGELOG.md) · [Contributing](https://github.com/nimblescape/commentlinks-vscode/blob/main/CONTRIBUTING.md) · [Support](https://github.com/nimblescape/commentlinks-vscode/blob/main/SUPPORT.md) · [Issues](https://github.com/nimblescape/commentlinks-vscode/issues) · [Source](https://github.com/nimblescape/commentlinks-vscode)
 
-© 2026 Hannes Stauss (scalarion@nimblescape.com) · [MIT License](https://github.com/nimblescape/nimblescape-commentlinks/blob/main/LICENSE).
+© 2026 Hannes Stauss (scalarion@nimblescape.com) · [MIT License](https://github.com/nimblescape/commentlinks-vscode/blob/main/LICENSE).
